@@ -21,6 +21,7 @@ import sys
 import xml.etree.ElementTree as ElementTree
 import HTMLParser
 import time
+import ast, operator
 #################################################################################################################
 
 
@@ -38,6 +39,8 @@ commandLength	= len( bot_cmd)					# Gets the length of the bot command.
 password 		= "sjPass"
 
 channelFile		= "channels.txt"
+
+version 		= "2.0"
 
 with open(channelFile) as file:
 	content 	= file.readlines()
@@ -72,11 +75,49 @@ apiKeys				= {
 	"wolfram": "9HX9YX-HJHHPWPVK4"
 }
 
+docList				= 'https://raw.githubusercontent.com/nimdahk/AHKLink/master/AHKLink_index.tsv'
+try:
+	url				= 'http://ajax.googleapis.com/ajax/services/search/web?v=1.0&q=' + search 
+	hdr 			= {'User-Agent': 'Mozilla/5.0'} 
+	request 		= urllib2.Request( url, headers=hdr)
+	response 		= urllib2.urlopen( request)
+
+	docList			= response.read()
+except:
+	docList 		= "Did not cache doc data."
+
+
 messageData 		= []
 ##################################################################################################################
 
 
 ##################################################################################################################
+binOps = {
+    ast.Add: operator.add,
+    ast.Sub: operator.sub,
+    ast.Mult: operator.mul,
+    ast.Div: operator.div,
+    ast.Mod: operator.mod
+}
+
+def solve(s):
+    node = ast.parse(s, mode='eval')
+
+    def _eval(node):
+        if isinstance(node, ast.Expression):
+            return _eval(node.body)
+        elif isinstance(node, ast.Str):
+            return node.s
+        elif isinstance(node, ast.Num):
+            return node.n
+        elif isinstance(node, ast.BinOp):
+            return binOps[type(node.op)](_eval(node.left), _eval(node.right))
+        else:
+            raise Exception('Unsupported type {}'.format(node))
+
+    return _eval(node.body)
+
+
 def google_search( query ):
 	search 			= urllib.quote(query)
 
@@ -133,10 +174,8 @@ def google():
 
 def math():
 	try:
-		outputData 		= str( eval( paramData ) )
-		if len( outputData ) > 200:
-			outputData 	= str( outputData[:len(outputData )-200] ) + " last 200 digits."
-
+		outputData 		= str( solve( paramData ) )
+		print( outputData )
 
 		irc.send("PRIVMSG " + channel + " :\x02" + paramData + "\x02 - " + outputData + "\r\n")
 	except:
@@ -320,9 +359,8 @@ def commands():
 ##################################################################################################################
 commandRegex 		= {
 	".*" + bot_cmd + "(g|google|search)\s(?P<Data>.*?)(&{2}|\\r)": "google",
-	".*" + bot_cmd + "(expression|math|solve)\s(?P<Data>.*?)(&{2}|\\r)": "mat",
+	".*" + bot_cmd + "(m|solve|math)\s(?P<Data>.*?)(&{2}|\\r)": "math",
 	".*\s" + botName + "\s.*?(google|search)\s(?!(the\s|)(movie))(?P<Data>.*?)(&{2}|\\r)" : "google",
-	".*\s" + botName + "\s.*?(math|equation|solve)\s(?P<Data>.*?)(&{2}|\\r)" : "mat",
 	".*" + bot_cmd + "(kill|k)\s(?P<Data>.*?)\s?(&{2}|\\r)" : "kill",
 	".*\s" + botName + "\s.*?(kill)\s(?P<Data>.*?)\s?(&{2}|\\r)" : "kill",
 	".*" + bot_cmd + "(wolfram|wa)\s(?P<Data>.*?)(&{2}|\\r)" : "wolfram",
@@ -349,7 +387,6 @@ commandRegex 		= {
 }
 
 commandList 	= {
-	"math"	: math,
 	"google" : google,
 	"kill"	: kill,
 	"wolfram" : wolfram,
@@ -364,13 +401,13 @@ commandList 	= {
 	"stop" : stop,
 	"rss" : rss,
 	"message" : message,
-	"bitcoin" : bitcoin
+	"bitcoin" : bitcoin,
+	"math" : math
 }
 
 ownerCommands 		= ["join", "leave", "stop" ]
 
 def callFunction(function):
-	print("Calling function " + function)
 
 	for key in ownerCommands:
 		if key == function and host != master:
@@ -405,6 +442,7 @@ data 				= 1
 while data:
 	data 			= irc.recv(1024)
 	dt 				= re.match(":(?P<User>.*?)!~?(?P<Host>.*?)\s(?P<Command>.*?)\s(?P<Channel>.*?)\s:(?P<Message>.*\\r)", data)
+
 
 	if data[0:4] == "PING":											# If PING is found in the data.
 		irc.send("PONG :" + data[6:] + " \r\n")	
