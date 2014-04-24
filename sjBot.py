@@ -22,6 +22,7 @@ import xml.etree.ElementTree as ElementTree
 import HTMLParser
 import time
 import ast, operator
+import ConfigParser
 #################################################################################################################
 
 
@@ -36,14 +37,19 @@ bot_cmd     	= "!"                        	# The command, so the bot knows its b
 master      	= "Sjc1000@unaffiliated/sjc1000"    	# The master of the bot ( the one who can use the master commands ).
 
 commandLength	= len( bot_cmd)					# Gets the length of the bot command.
-password 		= "sjPass"
 
 channelFile		= "channels.txt"
+settingsIni		= "conf.ini"
 
 version 		= "2.0"
 
 with open(channelFile) as file:
 	content 	= file.readlines()
+
+config 			= ConfigParser.ConfigParser()
+config.read(settingsIni)
+
+password 		= config.get("details", "password")
 ##################################################################################################################
 
 
@@ -430,7 +436,7 @@ USER 				= "USER " + botName + " " + botName + " " + botName + " :Uptone Softwar
 irc.send( NICK )
 irc.send( USER )
 
-irc.send("PRIVMSG Nickserv :Identify sjBot sjPass \r\n")
+irc.send("PRIVMSG Nickserv :Identify sjBot " + password + " \r\n")
 
 for x in content:
 	irc.send("JOIN " + x + "\r\n")
