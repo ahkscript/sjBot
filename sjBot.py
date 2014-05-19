@@ -68,6 +68,7 @@ class commands():
 
 	weapons 		= [
 		"a small lion.",
+		"a dictionary",
 		"an angry mountain.",
 		"the power of 3.",
 		"a honey badger.",
@@ -79,6 +80,36 @@ class commands():
 		"a rraaaiiinnboww trout.",
 		"bordem."
 	]
+	
+	class ColorCode:
+		White 		= chr(0x00)	# < White
+		Black 		= chr(0x01)	# < Black
+		DarkBlue 	= chr(0x02)	# < Dark blue
+		DarkGreen 	= chr(0x03)	# < Dark green
+		Red 		= chr(0x04)	# < Red
+		DarkRed 	= chr(0x05)	# < Dark red
+		DarkViolet 	= chr(0x06)	# < Dark violet
+		Orange 		= chr(0x07)	# < Orange
+		Yellow 		= chr(0x08)	# < Yellow
+		LightGreen 	= chr(0x09)	# < Light green
+		Cyan 		= chr(0x0A)	# < Cornflower blue
+		LightCyan 	= chr(0x0B)	# < Light blue
+		Blue 		= chr(0x0C)	# < Blue
+		Violet 		= chr(0x0D)	# < Violet
+		DarkGray 	= chr(0x0E)	# < Dark gray
+		LightGray 	= chr(0x0F)	# < Light gray
+		
+	class ControlCode:
+		Bold		= chr(0x02)	# < Bold
+		Color		= chr(0x03)	# < Color
+		Reverse		= chr(0x16)	# < Reverse
+		Reset		= chr(0x0F)	# < Reset
+		Italic		= chr(0x09)	# < Italic
+		Italic2		= chr(0x1D)	# < Italic
+		Strike		= chr(0x13)	# < Strike-Through
+		Underline	= chr(0x15)	# < Underline
+		Underline2	= chr(0x1F)	# < Underline
+		
 
 	apiKeys				= {
 		"ahk": "009062493091172133168:_o2f4moc9ce",
@@ -266,6 +297,15 @@ class commands():
 
 		return output
 
+	def dance(self, params):
+		d = ControlCode.Color
+		cOrange		= d+ColorCode.Orange
+		cViolet		= d+ColorCode.Violet
+		cRed		= d+ColorCode.Red
+		cLightGreen	= d+ColorCode.LightGreen
+		cLightCyan	= d+ColorCode.LightCyan
+		cBlue		= d+ColorCode.Blue
+		return cOrange + "Danceroo! :D " + cViolet + "yay " + cRed + "yay " + cLightGreen + "yay! " + cLightCyan + "\\(^_^)/ " + cBlue + ":D"
 
 	def ahk(self, params):
 		return self.google_search("autohotkey: " + str( self.paramData) )
@@ -327,6 +367,7 @@ class sjBot(commands):
 				"hello" : commands.hello,
 				"hey" : commands.hello,
 				"hi" : commands.hello,
+				"dance" : commands.dance,
 				"g" : commands.google,
 				"google" : commands.google,
 				"rss" : commands.rss,
