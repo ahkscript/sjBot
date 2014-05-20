@@ -63,6 +63,7 @@ password 		= config.get("details", "password")
 
 
 ############################################ IRC VARS ############################################################
+## see https://github.com/myano/jenni/wiki/IRC-String-Formatting
 class ColorCode:
 	White 		= '00'	# < White
 	Black 		= '01'	# < Black
