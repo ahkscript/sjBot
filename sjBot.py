@@ -47,7 +47,7 @@ except:
 	settingsIni 	= "conf.ini"
 
 
-version 		= "3.0"
+version 		= "3.0.04"
 
 with open(channelFile) as file:
 	content 	= file.readlines()
@@ -68,6 +68,7 @@ class commands():
 
 	weapons 		= [
 		"a small lion.",
+		"a dictionary",
 		"an angry mountain.",
 		"the power of 3.",
 		"a honey badger.",
@@ -86,6 +87,33 @@ class commands():
 	}
 
 	messageData  		= []
+
+	colorCode 			= {
+		"white" : "\x030",
+		"black" : "\x031",
+		"darkblue" : "\x032",
+		"darkgreen" : "\x033",
+		"red" : "\x034",
+		"darkred" : "\x035",
+		"darkviolet" : "\x036",
+		"orange" : "\x037",
+		"yellow" : "\x038",
+		"lightgreen" : "\x039",
+		"cyan" : "\x0310",
+		"lightcyan" : "\x0311",
+		"lightblue" : "\x0312",
+		"pink" : "\x0313",
+		"grey" : "\x0314",
+		"silver" : "\x0315"
+	}
+
+	controlCode 		= {
+		"bold" : "\x02",
+		"italic" : "\x1D",
+		"rcolor" : "\x0F",
+		"reverse" : "\x16",
+		"underline" : "\x1F"
+	}
 
 
 
@@ -177,7 +205,7 @@ class commands():
 				winddirection 	= "northerly"
 			if winddirection > 225 and winddirection < 315:
 				winddirection	= "easterly"
-			if winddirection > 315 and winddirection < 360:
+			if winddirection > 315 and winddirection < 45:
 				winddirection 	= "southerly"
 
 			if city 		== "":
@@ -252,6 +280,7 @@ class commands():
 
 		return "notext"
 
+
 	def aRss(self, params):
 
 		if len(params) > 0:
@@ -292,8 +321,15 @@ class commands():
 
 		return output + " Use !help [command name] to get more info."
 
-	def WhoIsOnline(self, params):
-		return "This command is still a work in progress."
+	def whoIsOnline(self, params): #are <strong>(.*?)</strong> users     <--regex
+		url			= 'http://ahkscript.org/boards/'
+		hdr 			= {'User-Agent': 'Mozilla/5.0'} 
+		request 		= urllib2.Request( url, headers=hdr)
+		response 		= urllib2.urlopen( request)
+		html			= response.read()
+		print( html )
+		reg 			= re.match(".*?<strong>(?P<users>\d+)</strong> users.*?", html, re.S )
+		return str( reg.group("users") ) + " users urrently online at the forum."
 
 
 	def newestMem(self, params):
@@ -311,7 +347,38 @@ class commands():
 		return "This command is still a work in progress."
 
 	def stop(self, params):
+		self.thread.cancel()
 		sys.exit()
+
+
+	def kill(self, params):
+		weapon 		= ""
+
+
+		if len( params ) > 1:
+			for k in params[1:]:
+				weapon 	= weapon + k + " "
+		else:
+			weapon 		= random.choice( self.weapons )
+			
+
+		if len(params ) > 0:
+			killWho 	= params[0]
+		else:
+			return "I require more params for this command."
+
+
+		return "\x01ACTION Kills " + killWho + " with " + weapon + "\x01"
+
+
+	def dance(self, params):
+		c 		= self.colorCode
+		return c["orange"] + "Danceroo! :D " + c["cyan"] + "yay " + c["red"] + "yay " + c["lightgreen"] + "yay! " + c["darkblue"] + "\(^_^)/ :D\x03"
+
+	def paste(self, params):
+		if len(params ) > 0:
+			return params[0] + ", Please paste your code at http://www.bpaste.net"
+		return "Please paste your code at http://www.bpaste.net"
 
 ##################################################################################################################
 
@@ -319,60 +386,66 @@ class commands():
 ##################################################################################################################
 class sjBot(commands):
 
+
+	bot_cmd 		= "!"
+	commandList 	= {
+		"hello" : commands.hello,
+		"hey" : commands.hello,
+		"hi" : commands.hello,
+		"g" : commands.google,
+		"google" : commands.google,
+		"rss" : commands.rss,
+		"feed" : commands.rss,
+		"we" : commands.weather,
+		"weather" : commands.weather,
+		"join" : commands.join,
+		"leave" : commands.leave,
+		"autorss" : commands.aRss,
+		"channels" : commands.channels,
+		"ahk" : commands.ahk,
+		"a" : commands.ahk,
+		"help" : commands.help,
+		"commands" : commands.help,
+		"stop" : commands.stop,
+		"owner" : commands.whoIs,
+		"kill" : commands.kill,
+		"k" : commands.kill,
+		"dance" : commands.dance,
+		"d" : commands.dance,
+		"p" : commands.paste,
+		"paste" : commands.paste,
+		"online" : commands.whoIsOnline
+	}
+	cmdInfo 			= {
+		"hello" : "This command will say hello to the user, or optionally say hello to someone in specific. !hello [user]",
+		"hey" : "This command will say hello to the user, or optionally say hello to someone in specific. !hey [user]",
+		"hi" : "This command will say hello to the user, or optionally say hello to someone in specific. !hi [user]	",
+		"google" : "This command will search google with a specified query. !google <query>",
+		"rss" : "This command will show the latest posts on ahkscript. With an optional specified ammount. !rss [ammount]",
+		"weather" : "This command will show weather for a specified location. !weather <location>",
+		"join" : "This command will join a channel, only usable by the bots master. !join <channel1> [channel2] etc.",
+		"stop" : "Stops the process. Only the bots mater can use this. !stop",
+		"ahk" : "Searches the forum for something. !ahk <query>"
+	}
+	ownerCommands	= [
+		"join", "leave", 'autoRss', "stop"
+	]
+	owner 			= "Sjc1000@unaffiliated/sjc1000"
+	autorss 		= 0
+	channelList 	= []
+	trusted_channels 	= [
+		"#ahk",
+		"#ahkscript",
+		"#Sjc_Bot"
+	]
+
+
 	def __init__(self, network, port, nickname, user, password):
 		self.irc 		= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.irc.connect((network, port))
 		self.irc.send("NICK " + nickname + " \r\n")
 		self.irc.send("USER " + user + " " + user + " " + user + " :Uptone Software\r\n")
 		self.irc.send("PRIVMSG NickServ :Identify " + nickname + " " + password + "\r\n")
-
-
-		################### Variables         ###################
-		self.bot_cmd 		= "!"
-		self.commandList 	= {
-				"hello" : commands.hello,
-				"hey" : commands.hello,
-				"hi" : commands.hello,
-				"g" : commands.google,
-				"google" : commands.google,
-				"rss" : commands.rss,
-				"feed" : commands.rss,
-				"we" : commands.weather,
-				"weather" : commands.weather,
-				"join" : commands.join,
-				"leave" : commands.leave,
-				"autorss" : commands.aRss,
-				"channels" : commands.channels,
-				"ahk" : commands.ahk,
-				"a" : commands.ahk,
-				"help" : commands.help,
-				"commands" : commands.help,
-				"stop" : commands.stop,
-				"owner" : commands.whoIs
-		}
-		self.cmdInfo 			= {
-				"hello" : "This command will say hello to the user, or optionally say hello to someone in specific. !hello [user]",
-				"hey" : "This command will say hello to the user, or optionally say hello to someone in specific. !hey [user]",
-				"hi" : "This command will say hello to the user, or optionally say hello to someone in specific. !hi [user]	",
-				"google" : "This command will search google with a specified query. !google <query>",
-				"rss" : "This command will show the latest posts on ahkscript. With an optional specified ammount. !rss [ammount]",
-				"weather" : "This command will show weather for a specified location. !weather <location>",
-				"join" : "This command will join a channel, only usable by the bots master. !join <channel1> [channel2] etc.",
-				"stop" : "Stops the process. Only the bots mater can use this. !stop",
-				"ahk" : "Searches the forum for something. !ahk <query>"
-		}
-		self.ownerCommands	= [
-			"join", "leave", 'autoRss', "stop"
-		]
-		self.owner 			= "Sjc1000@unaffiliated/sjc1000"
-		self.autorss 		= 0
-		self.channelList 	= []
-		self.trusted_channels 	= [
-			"#ahk",
-			"#ahkscript",
-			"#Sjc_Bot"
-		]
-		#########################################################
 
 	def Message(self, toWho, text):
 		self.irc.send( "PRIVMSG " + toWho  + " :" +text + "\r\n")
@@ -400,14 +473,15 @@ class sjBot(commands):
 
 
 	def Start(self):
-		#thread.start_new_thread(self.autoRss, ())
+		#self.thread 		= Timer(30, self.autoRss)
+		#self.thread.start()
 		return self.loop()
 
 
 	#def autoRss(self):
 
 	#	while 1:
-	#		time.sleep(60)
+	#		self.thread.start()
 
 #			if self.autorss == 0:
 #				continue
@@ -451,7 +525,7 @@ class sjBot(commands):
 			
 			try:
 				data 		= self.irc.recv(1024)
-				#print( data )
+				print( data )
 			except:
 				time.sleep(60)
 				thread.start_new_thread(self.loop, ())
@@ -506,6 +580,36 @@ class sjBot(commands):
 							
 							if output != "notext":
 								self.Message(self.channel, output )
+
+			if self.autorss == 0:
+				continue
+
+
+			if 'last' not in locals():
+				last 		= ""
+
+			url				= 'http://ahkscript.org/boards/feed.php'
+			hdr 			= {'User-Agent': 'Mozilla/5.0'} 
+			request 		= urllib2.Request( url, headers=hdr)
+			response 		= urllib2.urlopen( request)
+			xml				= response.read()
+			xml 			= unicode(xml, errors='ignore')
+
+
+			if last == xml:
+				continue
+
+			last 			= xml
+
+			xmlmatch 		= re.findall("<entry>.*?<author><name><.*?\[.*?\[(.*?)\]\]>.*?<updated>(.*?)<.*?<published>(.*?)</published>.*?<id>(.*?)</id>.*?<title.*?><.*?\[.*?\[(.*?)\]\]></title>", xml, re.S)
+			name 			= xmlmatch[0][0]
+			updated 		= xmlmatch[0][1]
+			published 		= xmlmatch[0][2]
+			link 			= HTMLParser.HTMLParser().unescape(xmlmatch[0][3])
+			title 			= HTMLParser.HTMLParser().unescape(xmlmatch[0][4])
+
+			for ch in self.channelList:
+				self.Message(ch, link)
 
 ##################################################################################################################
 
