@@ -425,7 +425,14 @@ class sjBot(commands):
 		"weather" : "This command will show weather for a specified location. !weather <location>",
 		"join" : "This command will join a channel, only usable by the bots master. !join <channel1> [channel2] etc.",
 		"stop" : "Stops the process. Only the bots mater can use this. !stop",
-		"ahk" : "Searches the forum for something. !ahk <query>"
+		"ahk" : "Searches the forum for something. !ahk <query>",
+		"help" : "Gives info about commands. !help <command>",
+		"stop" : "Stops the bot, only usable by the bots master. !stop",
+		"owner" : "Makes the bot say who the master is. !owner",
+		"kill" : "Kills a specified user with either a random or specified weapon. !kill <user> [weapon]",
+		"dance" : "Makes the bot dance :D. !dance",
+		"paste" : "Tells a user to paste their code at bpaste.net. !paste [user]",
+		"online" : "Shows how many users are online at the forum. !online"
 	}
 	ownerCommands	= [
 		"join", "leave", 'autoRss', "stop"
