@@ -329,7 +329,7 @@ class commands():
 		html			= response.read()
 		print( html )
 		reg 			= re.match(".*?<strong>(?P<users>\d+)</strong> users.*?", html, re.S )
-		return str( reg.group("users") ) + " users urrently online at the forum."
+		return str( reg.group("users") ) + " users currently online at the forum."
 
 
 	def newestMem(self, params):
