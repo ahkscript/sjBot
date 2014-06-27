@@ -35,7 +35,7 @@ import os
 network     	= 'irc.freenode.net'          	# The network to join to.	
 port        	= 6667                         	# The port to join on ( 6667 is default ).
 
-botName        	= "sjBot"                  	# The name to start with.
+botName        	= "sjBots"                  	# The name to start with.
 master      	= []
 master.append( "Sjc1000@unaffiliated/sjc1000" )
 
@@ -420,6 +420,8 @@ class commands():
 				i 	= i + 1
 			print( loggedusers[i]["user"] + " " +  params[0] )
 			config.set("owners", loggedusers[i]["user"], params[0] )
+
+			loggedusers[i]["pass"] 		= params[0]
 			with open(settingsIni, 'wb') as configfile:
 				config.write( configfile )
 
