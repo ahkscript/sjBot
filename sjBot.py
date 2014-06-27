@@ -35,7 +35,7 @@ import os
 network     	= 'irc.freenode.net'          	# The network to join to.	
 port        	= 6667                         	# The port to join on ( 6667 is default ).
 
-botName        	= "sjBots"                  	# The name to start with.
+botName        	= "sjBot"                  	# The name to start with.
 master      	= []
 master.append( "Sjc1000@unaffiliated/sjc1000" )
 
