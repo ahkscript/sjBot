@@ -35,7 +35,7 @@ import os
 network     	= 'irc.freenode.net'          	# The network to join to.	
 port        	= 6667                         	# The port to join on ( 6667 is default ).
 
-botName        	= "sjBot"                  	# The name to start with.
+botName        	= "sjBots"                  	# The name to start with.
 master      	= []
 master.append( "Sjc1000@unaffiliated/sjc1000" )
 
@@ -393,6 +393,7 @@ class commands():
 		if any( c["user"].lower() == params[0].lower()  for c in loggedusers ):
 			i = 0		
 			while( i < len( loggedusers ) ):
+				print( master )
 				if ( loggedusers[i]["user"].lower() == params[0].lower() ):
 					break
 				i 	= i + 1
@@ -512,19 +513,18 @@ class sjBot(commands):
 		self.irc.send("NOTICE " + toWho + " :" + text + "\r\n")
 
 	def Join(self, channel):
-		self.channelList.append(channel)
 		self.irc.send("JOIN " + channel + "\r\n")
 
 	def Part(self, channel):
-		self.channelList.remove(channel)
 		self.irc.send("PART " + channel + "\r\n")
 
 	def Pong(self, server): #PING :verne.freenode.net  - EXAMPLE	
 		self.irc.send("PONG :" + server + "\r\n")
 
 	def callCommand(self, commandName):
-
-		if any( c == commandName  for c in self.ownerCommands ) and any( c != self.host  for c in master ):
+		print( self.host )
+		print( master )
+		if any( c == commandName  for c in self.ownerCommands ) and not any( c == self.host  for c in master ):
 			return "You are not my master. " + self.user + "."
 		else:
 			return self.commandList[ commandName](self, self.fullData)
