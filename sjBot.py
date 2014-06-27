@@ -35,8 +35,9 @@ import os
 network     	= 'irc.freenode.net'          	# The network to join to.	
 port        	= 6667                         	# The port to join on ( 6667 is default ).
 
-botName        	= "sjBot"                  	# The name to start with.                    	# The command, so the bot knows its being told to do something.
-master      	= "Sjc1000@unaffiliated/sjc1000"    	# The master of the bot ( the one who can use the master commands ).
+botName        	= "sjBots"                  	# The name to start with.
+master      	= []
+master.append( "Sjc1000@unaffiliated/sjc1000" )
 
 
 try:
@@ -47,7 +48,7 @@ except:
 	settingsIni 	= "conf.ini"
 
 
-version 		= "3.0.04"
+version 		= "14"
 
 with open(channelFile) as file:
 	content 	= file.readlines()
@@ -57,6 +58,12 @@ config 			= ConfigParser.ConfigParser()
 config.read(settingsIni)
 
 password 		= config.get("details", "password")
+ownerlist 		= config.items("owners")
+
+loggedusers 	= []
+
+for x in ownerlist:
+	loggedusers.append({"user": x[0], "pass": x[1], "host": ""})
 ##################################################################################################################
 
 
@@ -347,7 +354,6 @@ class commands():
 		return "This command is still a work in progress."
 
 	def stop(self, params):
-		self.thread.cancel()
 		sys.exit()
 
 
@@ -380,12 +386,52 @@ class commands():
 			return params[0] + ", Please paste your code at http://www.bpaste.net"
 		return "Please paste your code at http://www.bpaste.net"
 
+	def login(self, params):
+		if len( params ) < 1:
+			return "Not enough params passed to login, Please specify both username and password."
+
+		if any( c["user"].lower() == params[0].lower()  for c in loggedusers ):
+			i = 0		
+			while( i < len( loggedusers ) ):
+				if ( loggedusers[i]["user"].lower() == params[0].lower() ):
+					break
+				i 	= i + 1
+
+			if ( loggedusers[i]["user"].lower() == params[0].lower() and loggedusers[i]["pass"] == params[1] ):
+				loggedusers[i]["host"]   = self.host
+				if ( any( c == self.host  for c in master )):
+					return "Already logged in!"
+				
+				master.append( self.host )
+				return "Logged in!"
+	
+
+		return "Could not login"
+
+	def changePass(self, params):
+		if len( params ) < 0:
+			return "Not enough params passed to change password, please specify a password to change to."
+		i = 0
+	
+		if any( c["host"].lower() == self.host.lower()  for c in loggedusers ):
+			while( i < len( loggedusers ) ):
+				if ( loggedusers[i]["host"].lower() == self.host.lower() ):
+					break
+				i 	= i + 1
+			print( loggedusers[i]["user"] + " " +  params[0] )
+			config.set("owners", loggedusers[i]["user"], params[0] )
+			with open(settingsIni, 'wb') as configfile:
+				config.write( configfile )
+
+			return "Password has been changed!"
+
+		return "Could not change password"
+
 ##################################################################################################################
 
 
 ##################################################################################################################
 class sjBot(commands):
-
 
 	bot_cmd 		= "!"
 	commandList 	= {
@@ -414,7 +460,10 @@ class sjBot(commands):
 		"d" : commands.dance,
 		"p" : commands.paste,
 		"paste" : commands.paste,
-		"online" : commands.whoIsOnline
+		"online" : commands.whoIsOnline,
+		"login" : commands.login,
+		"changepass" : commands.changePass,
+		"cp" : commands.changePass
 	}
 	cmdInfo 			= {
 		"hello" : "This command will say hello to the user, or optionally say hello to someone in specific. !hello [user]",
@@ -473,7 +522,7 @@ class sjBot(commands):
 
 	def callCommand(self, commandName):
 
-		if any( c == commandName  for c in self.ownerCommands ) and self.host != self.owner:
+		if any( c == commandName  for c in self.ownerCommands ) and any( c != self.owner  for c in master ):
 			return "You are not my master. " + self.user + "."
 		else:
 			return self.commandList[ commandName](self, self.fullData)
@@ -570,12 +619,12 @@ class sjBot(commands):
 						self.fullData 	= self.params[ rIndex + 1:]
 						checkCmd 		= self.params[ rIndex ]
 						command 		= self.params[ rIndex ]
-						self.paramData 			= " ".join(self.params[1:])
+						self.paramData 		= " ".join(self.params[rIndex + 1:])
 					except:
 						checkCmd 		= self.params[0]
 						command 		= self.params[0]
-						self.fullData 	= self.params[1:]
-						self.paramData 			= " ".join(self.params[1:])
+						self.fullData 		= self.params[1:]
+						self.paramData 		= " ".join(self.params[1:])
 
 
 					if checkCmd[:1] == self.bot_cmd:
@@ -586,37 +635,10 @@ class sjBot(commands):
 							output 			= self.callCommand( command )
 							
 							if output != "notext":
+								if self.channel == botName:
+									self.channel = self.user
+								
 								self.Message(self.channel, output )
-
-			if self.autorss == 0:
-				continue
-
-
-			if 'last' not in locals():
-				last 		= ""
-
-			url				= 'http://ahkscript.org/boards/feed.php'
-			hdr 			= {'User-Agent': 'Mozilla/5.0'} 
-			request 		= urllib2.Request( url, headers=hdr)
-			response 		= urllib2.urlopen( request)
-			xml				= response.read()
-			xml 			= unicode(xml, errors='ignore')
-
-
-			if last == xml:
-				continue
-
-			last 			= xml
-
-			xmlmatch 		= re.findall("<entry>.*?<author><name><.*?\[.*?\[(.*?)\]\]>.*?<updated>(.*?)<.*?<published>(.*?)</published>.*?<id>(.*?)</id>.*?<title.*?><.*?\[.*?\[(.*?)\]\]></title>", xml, re.S)
-			name 			= xmlmatch[0][0]
-			updated 		= xmlmatch[0][1]
-			published 		= xmlmatch[0][2]
-			link 			= HTMLParser.HTMLParser().unescape(xmlmatch[0][3])
-			title 			= HTMLParser.HTMLParser().unescape(xmlmatch[0][4])
-
-			for ch in self.channelList:
-				self.Message(ch, link)
 
 ##################################################################################################################
 
