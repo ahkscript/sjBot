@@ -524,7 +524,7 @@ class sjBot(commands):
 
 	def callCommand(self, commandName):
 
-		if any( c == commandName  for c in self.ownerCommands ) and any( c != self.owner  for c in master ):
+		if any( c == commandName  for c in self.ownerCommands ) and any( c != self.host  for c in master ):
 			return "You are not my master. " + self.user + "."
 		else:
 			return self.commandList[ commandName](self, self.fullData)
