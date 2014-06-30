@@ -604,19 +604,22 @@ class sjBot(commands):
 
 				self.message 	= dt.group("Message")
 
-				message 		= self.message.lower()
-				user 			= self.user.lower()
+				message 		= self.message
+				user 			= self.user
+				message 		= message.lower()
+				user 			= user.lower()
+
 
 				for x in chatObject["ontext"]:
 					for c in chatObject["ontext"][x]:	
 						for v in chatObject["ontext"][x][c]:
-							if ( v.replace("&botname", botName) == message ):
+							if ( v.replace("&botname", botName).lower() == message ):
 								if any( b == user  for b in chatObject["ontext"][x]["response"] ):
 									response 		= random.choice( chatObject["ontext"][x]["response"][user] ).replace("&user", user )				
 								else:
 									response 		= random.choice( chatObject["ontext"][x]["response"]["__default__"] ).replace("&user", user )
 				
-								self.message(self.channel, response)
+								self.Message(self.channel, response)
 				
 				
 				commands 	= self.message.split('||')
