@@ -35,7 +35,7 @@ import os
 network     	= 'irc.freenode.net'          	# The network to join to.	
 port        	= 6667                         	# The port to join on ( 6667 is default ).
 
-botName        	= "sjBot"                  	# The name to start with.
+botName        	= "sjBots"                  	# The name to start with.
 master      	= []
 master.append( "Sjc1000@unaffiliated/sjc1000" )
 
@@ -606,16 +606,18 @@ class sjBot(commands):
 
 				message 		= self.message
 				user 			= self.user
-				message 		= message.lower()
-				user 			= user.lower()
+
+				file 			= open(chatFile)
+				chat 			= file.read()
+				chatObject 		= json.loads( chat)
 
 
 				for x in chatObject["ontext"]:
 					for c in chatObject["ontext"][x]:	
 						for v in chatObject["ontext"][x][c]:
-							if ( v.replace("&botname", botName).lower() == message ):
-								if any( b == user  for b in chatObject["ontext"][x]["response"] ):
-									response 		= random.choice( chatObject["ontext"][x]["response"][user] ).replace("&user", user )				
+							if ( v.replace("&botname", botName).lower() == message.lower() ):
+								if any( b == user.lower()  for b in chatObject["ontext"][x]["response"] ):
+									response 		= random.choice( chatObject["ontext"][x]["response"][user.lower()] ).replace("&user", user )				
 								else:
 									response 		= random.choice( chatObject["ontext"][x]["response"]["__default__"] ).replace("&user", user )
 				
