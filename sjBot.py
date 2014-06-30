@@ -43,15 +43,19 @@ master.append( "Sjc1000@unaffiliated/sjc1000" )
 try:
 	channelFile		= os.path.dirname(os.path.realpath(__file__)) + "/channels.txt"
 	settingsIni		= os.path.dirname(os.path.realpath(__file__)) + "/conf.ini"
+	chatFile 		= os.path.dirname(os.path.realpath(__file__)) + "/chat.txt"
 except:
 	channelFile 	= "channels.txt"
 	settingsIni 	= "conf.ini"
+	chatFile 	= "chat.txt"
 
-
-version 		= "14"
 
 with open(channelFile) as file:
 	content 	= file.readlines()
+
+file 			= open(chatFile)
+chat 			= file.read()
+chatObject 		= json.loads( chat)
 
 
 config 			= ConfigParser.ConfigParser()
@@ -489,7 +493,6 @@ class sjBot(commands):
 	ownerCommands	= [
 		"join", "leave", 'autoRss', "stop"
 	]
-	owner 			= "Sjc1000@unaffiliated/sjc1000"
 	autorss 		= 0
 	channelList 	= []
 	trusted_channels 	= [
@@ -601,6 +604,20 @@ class sjBot(commands):
 
 				self.message 	= dt.group("Message")
 
+				message 		= self.message.lower()
+				user 			= self.user.lower()
+
+				for x in chatObject["ontext"]:
+					for c in chatObject["ontext"][x]:	
+						for v in chatObject["ontext"][x][c]:
+							if ( v.replace("&botname", botName) == message ):
+								if any( b == user  for b in chatObject["ontext"][x]["response"] ):
+									response 		= random.choice( chatObject["ontext"][x]["response"][user] ).replace("&user", user )				
+								else:
+									response 		= random.choice( chatObject["ontext"][x]["response"]["__default__"] ).replace("&user", user )
+				
+								self.message(self.channel, response)
+				
 				
 				commands 	= self.message.split('||')
 				for cm in commands:
