@@ -1,0 +1,29 @@
+{
+	"ontext": 
+	{	
+		"greeting": 
+		{	
+			"text": ["hi &botname", "hey &botname", "sup &botname", "hello &botname"],
+			"response":
+			{	"__default__": ["Hi &user", "Hey &user", "Howdy &user"],
+				"geekbot": ["I was told not to respond to bots."],
+				"winebot": ["I was told not to respond to bots."],
+				"nikbot": ["I was told not to respond to bots."],
+				"sjc1000": ["Hi Sir!", "Greetings master!", "Hawt dang, Sjc1000's here.. o/ Hiii :D"],
+				"tlm": ["Heey Teee Elll Emmm.", "Yo yo. Hey hey.", "Wassup brah."],
+				"tlm_android": ["Oh hey, tlm has been upgraded to an andriod.. :P", "Heey &user", "Beep boop beep i am also a droid"],
+				"isoraqathedh": ["Yo iso!", "Heya iso.", "Hey &user.", "Hey iso, Can i installz your filez??"],
+				"dorian-grim": ["Hello Mr Grim", "Hey Grim Reaper."],
+				"geekdude": ["Heya geeek dewd", "Hi mr dude", "Howdy G33KDUDE"],
+				"maestrith": ["Hi &user, moved to C++ yet? :D", "Hey &user, Spent all your moneyz on games yet?? :P", "Hey, how is AHK Studio coming along?"]
+			}
+		},
+		"leaving":
+		{	
+			"text": ["Bye &botname", "Cya &botname"],
+			"response":
+			{	"__default__": ["Bye &user", "Byeeee", "Bu bye &user", "Cya &user", "Cya"]
+			}
+		}
+	}
+}
