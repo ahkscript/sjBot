@@ -612,16 +612,15 @@ class sjBot(commands):
 				chatObject 		= json.loads( chat)
 
 
-				for x in chatObject["ontext"]:
-					for c in chatObject["ontext"][x]:	
-						for v in chatObject["ontext"][x][c]:
-							if ( v.replace("&botname", botName).lower() == message.lower() ):
-								if any( b == user.lower()  for b in chatObject["ontext"][x]["response"] ):
-									response 		= random.choice( chatObject["ontext"][x]["response"][user.lower()] ).replace("&user", user )				
-								else:
-									response 		= random.choice( chatObject["ontext"][x]["response"]["__default__"] ).replace("&user", user )
+				for x in chatObject["ontext"]:	
+					for v in chatObject["ontext"][x]["text"]:
+						if ( v.replace("&botname", botName).lower() == message.lower() ):
+							if any( b == user.lower()  for b in chatObject["ontext"][x]["response"] ):
+								response 		= random.choice( chatObject["ontext"][x]["response"][user.lower()] ).replace("&user", user )				
+							else:
+								response 		= random.choice( chatObject["ontext"][x]["response"]["__default__"] ).replace("&user", user )
 				
-								self.Message(self.channel, response)
+							self.Message(self.channel, response)
 				
 				
 				commands 	= self.message.split('||')
