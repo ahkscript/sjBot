@@ -3,6 +3,7 @@ password = mypassword
 name = botname
 network = irc.freenode.net
 port = 6667
+botcommand = !
 
 [owners]
 user1 = password1
