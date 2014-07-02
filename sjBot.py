@@ -32,10 +32,8 @@ import os
 ############################################## USER VARIABLES ###################################################
 #	Feel free to change all of these, they were put in variables like this so you can easily change them
 # 	without having to change raw code.
-network     	= 'irc.freenode.net'          	# The network to join to.	
-port        	= 6667                         	# The port to join on ( 6667 is default ).
 
-botName        	= "sjBot"                  	# The name to start with.
+             	
 master      	= []
 master.append( "Sjc1000@unaffiliated/sjc1000" )
 
@@ -62,6 +60,10 @@ config 			= ConfigParser.ConfigParser()
 config.read(settingsIni)
 
 password 		= config.get("details", "password")
+network     		= config.get("details", "network")  	
+port        		= config.get("details", "port")                    	
+botName        		= config.get("details", "name")
+
 ownerlist 		= config.items("owners")
 
 loggedusers 	= []
