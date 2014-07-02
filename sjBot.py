@@ -63,7 +63,7 @@ password 		= config.get("details", "password")
 network     		= config.get("details", "network")  	
 port        		= int( config.get("details", "port") )                   	
 botName        		= config.get("details", "name")
-
+botcmd 			= config.get("details", "botcommand")
 ownerlist 		= config.items("owners")
 
 loggedusers 	= []
@@ -442,7 +442,7 @@ class commands():
 ##################################################################################################################
 class sjBot(commands):
 
-	bot_cmd 		= "!"
+	bot_cmd 		= botcmd
 	commandList 	= {
 		"hello" : commands.hello,
 		"hey" : commands.hello,
