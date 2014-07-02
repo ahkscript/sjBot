@@ -1,0 +1,9 @@
+[details]
+password = mypassword
+name = botname
+network = irc.freenode.net
+port = 6667
+
+[owners]
+user1 = password1
+user2 = other_password
