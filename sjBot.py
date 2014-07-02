@@ -61,7 +61,7 @@ config.read(settingsIni)
 
 password 		= config.get("details", "password")
 network     		= config.get("details", "network")  	
-port        		= config.get("details", "port")                    	
+port        		= int( config.get("details", "port") )                   	
 botName        		= config.get("details", "name")
 
 ownerlist 		= config.items("owners")
