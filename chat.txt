@@ -15,7 +15,9 @@
 				"isoraqathedh": ["Yo iso!", "Heya iso.", "Hey &user.", "Hey iso, Can i installz your filez??"],
 				"dorian-grim": ["Hello Mr Grim", "Hey Grim Reaper."],
 				"geekdude": ["Heya geeek dewd", "Hi mr dude", "Howdy G33KDUDE"],
-				"maestrith": ["Hi &user, moved to C++ yet? :D", "Hey &user, Spent all your moneyz on games yet?? :P", "Hey, how is AHK Studio coming along?"]
+				"maestrith": ["Hi &user, moved to C++ yet? :D", "Hey &user, Spent all your moneyz on games yet?? :P", "Hey, how is AHK Studio coming along?"],
+				"joedf": ["Hola joedf!", "Long time no see amigo!", ":O Oh noes! The mighty joedf is here!"]
+				
 			}
 		},
 		"leaving":
