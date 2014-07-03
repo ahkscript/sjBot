@@ -152,10 +152,6 @@ class commands():
 		return self.fullData + " = " + outputData
 
 
-	def whoIs(self, params):
-		return "My owner's host name is " + self.owner
-
-
 	def google(self, params):
 		return self.google_search(self.fullData)
 
@@ -461,8 +457,7 @@ class sjBot(commands):
 		"a" : commands.ahk,
 		"help" : commands.help,
 		"commands" : commands.help,
-		"stop" : commands.stop,
-		"owner" : commands.whoIs,
+		"stop" : commands.stop
 		"kill" : commands.kill,
 		"k" : commands.kill,
 		"dance" : commands.dance,
@@ -485,8 +480,7 @@ class sjBot(commands):
 		"stop" : "Stops the process. Only the bots mater can use this. !stop",
 		"ahk" : "Searches the forum for something. !ahk <query>",
 		"help" : "Gives info about commands. !help <command>",
-		"stop" : "Stops the bot, only usable by the bots master. !stop",
-		"owner" : "Makes the bot say who the master is. !owner",
+		"stop" : "Stops the bot, only usable by the bots master. !stop"
 		"kill" : "Kills a specified user with either a random or specified weapon. !kill <user> [weapon]",
 		"dance" : "Makes the bot dance :D. !dance",
 		"paste" : "Tells a user to paste their code at bpaste.net. !paste [user]",
@@ -527,19 +521,14 @@ class sjBot(commands):
 		self.irc.send("PONG :" + server + "\r\n")
 
 	def callCommand(self, commandName):
-		print( self.host )
-		print( master )
 		if any( c == commandName  for c in self.ownerCommands ) and not any( c == self.host  for c in master ):
 			return "You are not my master. " + self.user + "."
 		else:
 			return self.commandList[ commandName](self, self.fullData)
 
-
-	def Start(self):
-		#self.thread 		= Timer(30, self.autoRss)
-		#self.thread.start()
-		return self.loop()
-
+	def waitFor(self, message ):
+		check 		= self.irc.recv(1024)
+		
 
 	#def autoRss(self):
 
@@ -582,16 +571,15 @@ class sjBot(commands):
 
 
 	def loop(self):
-		data 			= 1
 
-		while data:
+		while 1:
 			
 			try:
 				data 		= self.irc.recv(1024)
 				print( data )
 			except:
 				time.sleep(60)
-				thread.start_new_thread(self.loop, ())
+				self.loop()
 
 			dt 				= re.match(":(?P<User>.*?)!~?(?P<Host>.*?)\s(?P<Command>.*?)\s(?P<Channel>.*?)\s:(?P<Message>.*)\\r", data)
 
@@ -675,4 +663,4 @@ for chan in content:
 	sjBot.Join(chan)
 
 
-sjBot.Start()
+sjBot.loop()
