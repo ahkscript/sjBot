@@ -457,7 +457,7 @@ class sjBot(commands):
 		"a" : commands.ahk,
 		"help" : commands.help,
 		"commands" : commands.help,
-		"stop" : commands.stop
+		"stop" : commands.stop,
 		"kill" : commands.kill,
 		"k" : commands.kill,
 		"dance" : commands.dance,
@@ -480,7 +480,7 @@ class sjBot(commands):
 		"stop" : "Stops the process. Only the bots mater can use this. !stop",
 		"ahk" : "Searches the forum for something. !ahk <query>",
 		"help" : "Gives info about commands. !help <command>",
-		"stop" : "Stops the bot, only usable by the bots master. !stop"
+		"stop" : "Stops the bot, only usable by the bots master. !stop",
 		"kill" : "Kills a specified user with either a random or specified weapon. !kill <user> [weapon]",
 		"dance" : "Makes the bot dance :D. !dance",
 		"paste" : "Tells a user to paste their code at bpaste.net. !paste [user]",
