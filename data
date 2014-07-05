@@ -96,7 +96,8 @@
 		"registered": "sjBot",
 		"botcmd": "!",
 		"port": 6667,
-		"server": "irc.freenode.net"
+		"server": "irc.freenode.net",
+		"rsschans": ["#Sjc_Bot", "#ahkscript"]
 
 	}
 	
