@@ -1,3 +1,0 @@
-#Sjc_Bot
-#ahkscript
-#ahk
