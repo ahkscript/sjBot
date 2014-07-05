@@ -92,7 +92,7 @@
 			"Sjc1000": "notrealpassword",
 			"tlm": "notrealpassword"
 		},
-		"name": "sjBots",
+		"name": "sjBot",
 		"registered": "sjBot",
 		"botcmd": ".",
 		"port": 6667,
