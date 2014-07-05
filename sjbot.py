@@ -52,6 +52,7 @@ class sjBot(object):
 	botcmd 			= data["config"]["botcmd"]
 	ownerlist 		= data["config"]["owners"]
 	registeredName 		= data["config"]["registered"]
+	rssChannels 		= data["config"]["rsschans"]
 
 	paramData 		= ""
 	output 			= ""
@@ -63,6 +64,8 @@ class sjBot(object):
 		self.callCommand("joinserver")
 		self.mainthread 	= Process(target=self.loop)
 		self.mainthread.start()
+		self.rssthread 		= Process(target=self.autoRss)
+		self.rssthread.start()
 	
 	def callCommand(self, commandName, name="sys"):
 		fileLocals 		= dict()
@@ -84,6 +87,40 @@ class sjBot(object):
 		return data
 
 
+	def autoRss(self):
+		xml 		= ""
+
+		while 1:
+			time.sleep(30)
+			if 'last' not in locals():
+				last 		= ""
+
+			url				= 'http://ahkscript.org/boards/feed.php'
+			hdr 			= {'User-Agent': 'Mozilla/5.0'} 
+			request 		= urllib2.Request( url, headers=hdr)
+			response 		= urllib2.urlopen( request)
+			xml				= response.read()
+			xml 			= unicode(xml, errors='ignore')
+
+
+			if last == xml:
+				continue
+
+			last 			= xml
+
+			xmlmatch 		= re.findall("<entry>.*?<author><name><.*?\[.*?\[(.*?)\]\]>.*?<updated>(.*?)<.*?<published>(.*?)</published>.*?<id>(.*?)</id>.*?<title.*?><.*?\[.*?\[(.*?)\]\]></title>", xml, re.S)
+			name 			= xmlmatch[0][0]
+			updated 		= xmlmatch[0][1]
+			published 		= xmlmatch[0][2]
+			link 			= HTMLParser.HTMLParser().unescape(xmlmatch[0][3])
+			title 			= HTMLParser.HTMLParser().unescape(xmlmatch[0][4])
+
+
+
+			for ch in self.rssChannels:
+				self.irc.send("PRIVMSG " + ch + " :" + name + " - " + title + " : " + link + "\r\n")
+
+
 	def loop(self):
 		while 1:
 			data 		= self.recieve(1)
@@ -96,6 +133,7 @@ class sjBot(object):
 			self.ontextObject	= fdata["commands"]
 			self.weapons 		= fdata["weapons"]
 			self.botcmd 		= fdata["config"]["botcmd"]
+			self.rssChannels 	= fdata["config"]["rsschans"]
 			#======================= On message stuff =============================
 			for text in self.ontextObject["ontext"]:
 				if text.replace("&botname", self.botName).replace("&server", self.ircData[6:] ) in data:
@@ -113,6 +151,9 @@ class sjBot(object):
 				self.channel 		= dt.group("Channel")
 
 				self.message 		= dt.group("Message")
+				
+				if self.channel == self.botName:
+					self.channel = self.user
 
 
 				#====================== Chat stuff ====================================
