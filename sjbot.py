@@ -135,7 +135,6 @@ class sjBot(object):
 			self.ontextObject	= fdata["commands"]
 			self.weapons 		= fdata["weapons"]
 			self.botcmd 		= fdata["config"]["botcmd"]
-			self.rssChannels 	= fdata["config"]["rsschans"]
 			#======================= On message stuff =============================
 			for text in self.ontextObject["ontext"]:
 				if text.replace("&botname", self.botName).replace("&server", self.ircData[6:] ) in data:
