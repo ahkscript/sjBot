@@ -20,7 +20,8 @@
 			"leave": {"cmd": ["l", "leave", "part"], "help": "This will remove &botname from a channel. &botcmdleave <channel 1> [channel 2] [channel 3].", "file": "leave", "owner": 1 },
 			"nick": {"cmd": ["n","nick","name"], "help": "This will change the name of &botname to a new name. &botcmdnick <new name>", "file": "nick", "owner": 1 },
 			"dance": {"cmd": ["d", "dance"], "help": "This command will make the bot dance! :D &botcmddance", "file": "dance", "owner": 0 },
-			"hug": {"cmd": ["hug", "hugs"], "help": "Makes sjBot hug you! :D &botcmdhug [user].", "file": "hug", "owner": 0 }
+			"hug": {"cmd": ["hug", "hugs"], "help": "Makes &botname hug you! :D &botcmdhug [user].", "file": "hug", "owner": 0 },
+			"login": {"cmd": ["login"], "help": "This will let an owner login to be able to use owner commands. &botcmdlogin <username> <password>", "file": "login", "owner": 0 }
 
 		}
 
@@ -89,16 +90,14 @@
 
 	"config" : {
 		"owners": {
-			"Sjc1000": "notrealpassword",
-			"tlm": "notrealpassword"
+			"sjc1000": "d56366ef2955a4d3296d7a2921fde18855ec557ae1a7c712d69d5bc3",
+			"tlm": "1c19d9cfb6eb265396a70f8f382d8232f3f871f8e3b8e29d170c6013"
 		},
 		"name": "sjBot",
 		"registered": "sjBot",
-		"botcmd": "!",
+		"botcmd": ".",
 		"port": 6667,
-		"server": "irc.freenode.net",
-		"rsschans": ["#Sjc_Bot", "#ahkscript"]
-
+		"server": "irc.freenode.net"
 	}
 	
 }
