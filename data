@@ -95,7 +95,7 @@
 		},
 		"name": "sjBot",
 		"registered": "sjBot",
-		"botcmd": ".",
+		"botcmd": "!",
 		"port": 6667,
 		"server": "irc.freenode.net"
 	}
