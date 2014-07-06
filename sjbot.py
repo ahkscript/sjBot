@@ -53,7 +53,6 @@ class sjBot(object):
 	botcmd 			= data["config"]["botcmd"]
 	ownerlist 		= data["config"]["owners"]
 	registeredName 		= data["config"]["registered"]
-	rssChannels 		= data["config"]["rsschans"]
 	fileGlobals 		= globals()
 	paramData 		= ""
 	output 			= ""
