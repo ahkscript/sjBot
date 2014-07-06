@@ -4,7 +4,7 @@
 #===================================================================
 
 #======================= imports ===================================
-from multiprocessing import Process
+from multiprocessing import Process, Pipe
 import socket
 import re
 import json
@@ -17,6 +17,7 @@ import HTMLParser
 import time
 import ast, operator
 import ConfigParser
+import os
 #====================================================================
 
 #======================= Files ======================================
@@ -53,31 +54,33 @@ class sjBot(object):
 	ownerlist 		= data["config"]["owners"]
 	registeredName 		= data["config"]["registered"]
 	rssChannels 		= data["config"]["rsschans"]
-
+	fileGlobals 		= globals()
 	paramData 		= ""
 	output 			= ""
 	owners 			= []
 	owners.append("Sjc1000@unaffiliated/sjc1000")
+	threadlist 		= []
 
 	def __init__(self):
 		self.irc 		= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.callCommand("joinserver")
-		self.mainthread 	= Process(target=self.loop)
-		self.mainthread.start()
-		self.rssthread 		= Process(target=self.autoRss)
-		self.rssthread.start()
+		return self.loop()
 	
-	def callCommand(self, commandName, name="sys"):
+	def callCommand(self, commandName, name="sys", byref=""):
 		fileLocals 		= dict()
+
 		if name != "sys":
 			if self.ontextObject["commands"][name]["owner"] == 1 and not any( self.host == v  for v in self.owners):
 				self.irc.send("PRIVMSG " + self.channel + " :You are not my master, " + self.user + "\r\n")
 				return 1
-		execfile("modules/" + commandName + ".py", {"self":self }, fileLocals )
-		data 			= fileLocals["output"].replace("&botname", self.botName).replace("&botcmd", self.botcmd )
+		execfile("modules/" + commandName + ".py", {"self": self}, fileLocals )
+		data 			= fileLocals["output"].replace("&botname", self.botName).replace("&botcmd", self.botcmd )	
 		if data != "__notext__":
 			self.irc.send("PRIVMSG " + self.channel + " :" + data + "\r\n")
-			
+
+		if byref != "":
+			byref.send({"owners": self.owners})
+			byref.close()
 
 
 	def recieve(self, output=0, ammount=1024):
@@ -137,8 +140,7 @@ class sjBot(object):
 			#======================= On message stuff =============================
 			for text in self.ontextObject["ontext"]:
 				if text.replace("&botname", self.botName).replace("&server", self.ircData[6:] ) in data:
-					thread 		= Process(target=self.callCommand, args=(self.ontextObject["ontext"][text],) )
-					thread.start()
+					self.callCommand(self.ontextObject["ontext"][text])
 			#======================================================================
 
 
@@ -206,8 +208,12 @@ class sjBot(object):
 						for name in self.ontextObject["commands"]:
 							for cmd in self.ontextObject["commands"][name]["cmd"]:
 								if command == cmd:
-									thread 		= Process(target=self.callCommand, args=(self.ontextObject["commands"][name]["file"],name,) )
+									Parent, Child 	= Pipe()
+									thread 		= Process(target=self.callCommand, args=(self.ontextObject["commands"][name]["file"],name,Child) )
+									thread.daemon 	= True
 									thread.start()
+									output 		= Parent.recv()
+									self.owners 	= output["owners"]
 				#=================================================================
 
 sjBot 		= sjBot()
