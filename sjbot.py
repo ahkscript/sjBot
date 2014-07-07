@@ -136,9 +136,12 @@ class sjBot(object):
 			self.weapons 		= fdata["weapons"]
 			self.botcmd 		= fdata["config"]["botcmd"]
 			#======================= On message stuff =============================
-			for text in self.ontextObject["ontext"]:
-				if text.replace("&botname", self.botName).replace("&server", self.ircData[6:] ) in data:
-					self.callCommand(self.ontextObject["ontext"][text])
+			try:			
+				for text in self.ontextObject["ontext"]:
+					if text.replace("&botname", self.botName).replace("&server", self.ircData[6:] ) in data:
+						self.callCommand(self.ontextObject["ontext"][text])
+			except UnicodeDecodeError:
+				continue
 			#======================================================================
 
 
@@ -157,18 +160,21 @@ class sjBot(object):
 
 
 				#====================== Chat stuff ====================================
-				user 			= self.user
-				message 		= self.message
-				for x in self.chatObject:	
-					for v in self.chatObject[x]["text"]:
-						if ( v.replace("&botname", self.botName).lower() in message.lower() ):
-							if any( b == user.lower()  for b in self.chatObject[x]["response"] ):
-								response 		= random.choice( self.chatObject[x]["response"][user.lower()] ).replace("&user", user )				
-							else:
-								response 		= random.choice( self.chatObject[x]["response"]["__default__"] ).replace("&user", user )
-							if ( response == "__notext__"):
-								continue
-							self.irc.send("PRIVMSG " + self.channel + " :" + response + "\r\n")
+				try:				
+					user 			= self.user
+					message 		= self.message
+					for x in self.chatObject:	
+						for v in self.chatObject[x]["text"]:
+							if ( v.replace("&botname", self.botName).lower() in message.lower() ):
+								if any( b == user.lower()  for b in self.chatObject[x]["response"] ):
+									response 		= random.choice( self.chatObject[x]["response"][user.lower()] ).replace("&user", user )				
+								else:
+									response 		= random.choice( self.chatObject[x]["response"]["__default__"] ).replace("&user", user )
+								if ( response == "__notext__"):
+									continue
+								self.irc.send("PRIVMSG " + self.channel + " :" + response + "\r\n")
+				except UnicodeDecodeError:
+					continue
 				#======================================================================
 
 
