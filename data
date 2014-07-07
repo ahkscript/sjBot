@@ -89,10 +89,6 @@
 	],
 
 	"config" : {
-		"owners": {
-			"sjc1000": "d56366ef2955a4d3296d7a2921fde18855ec557ae1a7c712d69d5bc3",
-			"tlm": "1c19d9cfb6eb265396a70f8f382d8232f3f871f8e3b8e29d170c6013"
-		},
 		"name": "sjBot",
 		"registered": "sjBot",
 		"botcmd": "!",
