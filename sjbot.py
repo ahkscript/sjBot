@@ -51,7 +51,7 @@ class sjBot(object):
 	port        		= data["config"]["port"]                 	
 	botName        		= data["config"]["name"]
 	botcmd 			= data["config"]["botcmd"]
-	ownerlist 		= data["config"]["owners"]
+	ownerlist 		= config.items("owners")
 	registeredName 		= data["config"]["registered"]
 	fileGlobals 		= globals()
 	paramData 		= ""
