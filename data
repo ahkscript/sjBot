@@ -1,13 +1,14 @@
 {
-	"commands": {
-	
-		"ontext": 
-		{	"&botname MODE &botname": "joinchannels",
+	"on": {
 			"PING :&server": "pong",
-			"error: [Errno 104]" : "joinserver",
-			"This nickname is registered": "slogin"
-		},
-		"commands":
+			":&botname MODE &botname :+i": "slogin",
+			"is not a registered nickname.": "joinchannels",
+			"is now your hidden host (set by services.)" : "joinchannels"
+
+	},
+
+
+	"commands":
 		{
 			"hello": {"cmd": ["hi", "hey", "howdy", "hello"], "help": "This command says hello. &botcmdhello [user].", "file": "hello", "owner": 0 },
 			"google": {"cmd": ["google", "g", "search"], "help": "This command googles a query. &botcmdgoogle <query>.", "file": "google", "owner": 0 },
@@ -21,18 +22,16 @@
 			"nick": {"cmd": ["n","nick","name"], "help": "This will change the name of &botname to a new name. &botcmdnick <new name>", "file": "nick", "owner": 1 },
 			"dance": {"cmd": ["d", "dance"], "help": "This command will make the bot dance! :D &botcmddance", "file": "dance", "owner": 0 },
 			"hug": {"cmd": ["hug", "hugs"], "help": "Makes &botname hug you! :D &botcmdhug [user].", "file": "hug", "owner": 0 },
-			"login": {"cmd": ["login"], "help": "This will let an owner login to be able to use owner commands. &botcmdlogin <username> <password>", "file": "login", "owner": 0 }
+			"login": {"cmd": ["login"], "help": "This will let an owner login to be able to use owner commands. &botcmdlogin <username> <password>", "file": "login", "owner": 0 },
+			"stop": {"cmd": ["stop", "end", "quit"], "help": "This will stop the bots execution. &botcmdstop", "file": "stop", "owner": 1}
 
-		}
-
-	},
-	
+		},
 
 	"chat": {
 
 		"greeting": 
 		{	
-			"text": ["hi &botname", "hey &botname", "sup &botname", "hello &botname"],
+			"text": ["hi &botname", "hey &botname", "sup &botname", "hello &botname", "&botname hi", "&botname hey", "&botname sup"],
 			"response":
 			{	"__default__": ["Hi &user", "Hey &user", "Howdy &user"],
 				"geekbot": ["I was told not to respond to bots."],
@@ -45,7 +44,9 @@
 				"dorian-grim": ["Hello Mr Grim", "Hey Grim Reaper."],
 				"geekdude": ["Heya geeek dewd.", "Hi mr dude.", "Howdy G33KDUDE.", "Hi Geek D. Ude!"],
 				"maestrith": ["Hi &user, moved to C++ yet? :D", "Hey &user, Spent all your moneyz on games yet?? :P", "Hey, how is AHK Studio coming along?"],
-				"wvmz": ["Hi! Lets do some science! :D", "Hi fellow scientologist!"]
+				"wvmz": ["Hi! Lets do some science! :D", "Hi fellow scientologist!"],
+				"bkid": ["Hi Mr. Bot.", "Beep, boop, ima bot too :D", "0100100001101001"],
+				"nameless": ["Hey Mr. no name", "Hi, [Error: Name not found.]", "Hey Nameless-ex.... Awww, you're not an executable anymore :/"]
 			}
 		},
 		"leaving":
@@ -62,15 +63,9 @@
 			{
 				"__default__": ["__notext__"],
 				"sjc1000": ["You are a boss sir!", "You certainly are!", "Good one sir!"]
-			},
-			"text": ["NICK :SjcAFK"],
-			"response":
-			{
-				"__default__": ["Oh, i see how it is :(", "Gee thanks for telling me :(", "You're going then? :("]
 			}
 		}
 	},
-
 
 
 	"weapons": [
@@ -88,12 +83,13 @@
 		"bordem."
 	],
 
-	"config" : {
-		"name": "sjBot",
-		"registered": "sjBot",
-		"botcmd": "!",
+	"data": {
+
+		 
+		"server": "irc.freenode.net",
 		"port": 6667,
-		"server": "irc.freenode.net"
+		"channels": ["#Sjc_Bot"],
+		"name": "sjBot",
+		"cmd": "!"
 	}
-	
 }
