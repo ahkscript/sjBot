@@ -1,151 +1,181 @@
-#======================== sjBot v4+ ================================
-# Author:		Steven J. Core ( Sjc1000 )
-# Info:			IRC Bot
-#===================================================================
+#============================================================================================================
+#		Author: 		Steven J. Core ( Sjc1000 )
+#		Program:		sjBot. irc bot.
+#
+#		Comments:		sjBot v5. v4 was a fun experiment while it lasted, but it
+#					wasn't very practical. v5 will be super duper stable, i pinkie promise ;)
+#============================================================================================================
 
-#======================= imports ===================================
-from multiprocessing import Process, Pipe
+#== Imports =================================================================================================
 import socket
 import re
 import json
-import urllib2
-import urllib
-import random
 import sys
-import xml.etree.ElementTree as ElementTree
-import HTMLParser
 import time
-import ast, operator
 import ConfigParser
-import os
-#====================================================================
+import random
+#============================================================================================================
 
-#======================= Files ======================================
 try:
-	channelFile		= os.path.dirname(os.path.realpath(__file__)) + "/channels.txt"
 	settingsIni		= os.path.dirname(os.path.realpath(__file__)) + "/conf.ini"
 	dataFile 		= os.path.dirname(os.path.realpath(__file__)) + "/data"
 except:
-	channelFile 	= "channels.txt"
 	settingsIni 	= "conf.ini"
 	dataFile 	= "data"
-#====================================================================
 
 
-class sjBot(object):
-	config 			= ConfigParser.ConfigParser()
+#== sjBot class =============================================================================================
+class sjBot():
+	sjbotsettings 	= open( settingsIni ).read()
+	sjbotData 	= json.loads( open( dataFile ).read() )
+	commands 	= sjbotData["commands"]
+	server 		= sjbotData["data"]["server"]
+	port 		= sjbotData["data"]["port"]
+	botName 	= sjbotData["data"]["name"]
+	botcmd 		= sjbotData["data"]["cmd"]
+	channelList 	= sjbotData["data"]["channels"]
+	chatObject 	= sjbotData["chat"]
+	weapons 	= sjbotData["weapons"]
+	owners		= sjbotData["data"]["owners"]
+	config 		= ConfigParser.ConfigParser()
 	config.read(settingsIni)	
-	password 		= config.get("details", "password")
-
-	with open(channelFile) as file:
-		channelList 	= file.readlines()
-
-	file 			= open( dataFile )
-	data 			= file.read()
-	data 			= json.loads( data )
-	chatObject 		= data["chat"]
-	ontextObject		= data["commands"]
-	weapons 		= data["weapons"]
-
-	network     		= data["config"]["server"]
-	port        		= data["config"]["port"]                 	
-	botName        		= data["config"]["name"]
-	botcmd 			= data["config"]["botcmd"]
-	ownerlist 		= config.items("owners")
-	registeredName 		= data["config"]["registered"]
-	fileGlobals 		= globals()
-	paramData 		= ""
-	output 			= ""
-	owners 			= []
-	owners.append("Sjc1000@unaffiliated/sjc1000")
-	threadlist 		= []
-
-	def __init__(self):
-		self.irc 		= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		self.callCommand("joinserver")
-		return self.loop()
+	password 	= config.get("details", "password")
 	
-	def callCommand(self, commandName, name="sys", byref=""):
-		fileLocals 		= dict()
+	
+#============================================================================================================
+	def __init__(self):
+		self.irc 	= socket.socket(socket.AF_INET, socket.SOCK_STREAM )
+		self.irc.connect((self.server, self.port))
+		self.irc.send("NICK " + self.botName + " \r\n")
+		self.irc.send("USER " + self.botName + " " + self.botName + " " + self.botName + " :Uptone Software\r\n")		
+
+
+		self.run(1)
+		
+#============================================================================================================
+	def callCommand(self, commandName, name="sys" ):
+		fileOutput 	= dict()
+
 
 		if name != "sys":
-			if self.ontextObject["commands"][name]["owner"] == 1 and not any( self.host == v  for v in self.owners):
+			if self.commands[name]["owner"] == 1 and not isOwner:
 				self.irc.send("PRIVMSG " + self.channel + " :You are not my master, " + self.user + "\r\n")
 				return 1
-		execfile("modules/" + commandName + ".py", {"self": self}, fileLocals )
-		data 			= fileLocals["output"].replace("&botname", self.botName).replace("&botcmd", self.botcmd )	
-		if data != "__notext__":
-			self.irc.send("PRIVMSG " + self.channel + " :" + data + "\r\n")
 
-		if byref != "":
-			byref.send({"owners": self.owners})
-			byref.close()
+		execfile("modules/" + commandName + ".py", {"self": self}, fileOutput)
 
+		odata 			= fileOutput["output"]	
+		
 
-	def recieve(self, output=0, ammount=1024):
-		data 		= self.irc.recv(ammount)
-		if output:
-			print( data )
-		return data
+		channel 	= odata["channel"]
+		sendText 	= odata["text"]
 
 
-	def autoRss(self):
-		xml 		= ""
+		if channel == "__default__" and name != "sys":
+			channel = self.channel
 
-		while 1:
-			time.sleep(30)
-			if 'last' not in locals():
-				last 		= ""
+		sendText 	= sendText.replace("&botname", self.botName).replace("&botcmd", self.botcmd )
+		if sendText != "__notext__":
+			self.irc.send("PRIVMSG " + channel + " :" + sendText + "\r\n")
+#============================================================================================================
 
-			url				= 'http://ahkscript.org/boards/feed.php'
-			hdr 			= {'User-Agent': 'Mozilla/5.0'} 
-			request 		= urllib2.Request( url, headers=hdr)
-			response 		= urllib2.urlopen( request)
-			xml				= response.read()
-			xml 			= unicode(xml, errors='ignore')
+	def onText(self, checkText):
+		onText 		= self.sjbotData["on"]
+		
+		try:			
+			for text in onText:
+				if text.replace("&botname", self.botName).replace("&server", checkText[6:] ) in checkText:
+					self.callCommand(onText[text])
+		except UnicodeDecodeError:
+			return 0
+#============================================================================================================
+
+	def onChat(self, checkText):
+		try:				
+			user 			= self.user
+			message 		= self.message
+			for x in self.chatObject:	
+				for v in self.chatObject[x]["text"]:
+					if ( v.replace("&botname", self.botName).lower() in message.lower() ):
+						if any( b == user.lower()  for b in self.chatObject[x]["response"] ):
+							response 		= random.choice( self.chatObject[x]["response"][user.lower()] ).replace("&user", user )				
+						else:
+							response 		= random.choice( self.chatObject[x]["response"]["__default__"] ).replace("&user", user )
+						if ( response == "__notext__"):
+							return 0
+						self.irc.send("PRIVMSG " + self.channel + " :" + response + "\r\n")
+		except UnicodeDecodeError:
+			return 0
+
+#============================================================================================================
+
+	def isCommand(self, checkText ):
+		commands 	= self.message.split('||')
+		for cm in commands:
+					
+
+			self.params 	= cm.split(' ')
+
+			index 		= 0
+
+			for dex in self.params:
+				if self.botcmd in dex:
+					rIndex 	= index
+
+				index 		= index + 1
+						
+
+			try:
+				self.fullData 	= self.params[ rIndex + len(self.botcmd):]
+				checkCmd 		= self.params[ rIndex ]
+				command 		= self.params[ rIndex ]
+				self.paramData 		= " ".join(self.params[rIndex + len(self.botcmd):])
+			except:
+				checkCmd 		= self.params[0]
+				command 		= self.params[0]
+				self.fullData 		= self.params[len(self.botcmd):]
+				self.paramData 		= " ".join(self.params[len(self.botcmd):])
 
 
-			if last == xml:
-				continue
+			if checkCmd[:len(self.botcmd)] == self.botcmd:
+				command = command[len(self.botcmd):].lower()
+					
+				for name in self.commands:
+					for cmd in self.commands[name]["cmd"]:
+						if command == cmd:
+							try:
+								self.callCommand(self.commands[name]["file"], name)
+							except:
+								self.irc.send("PRIVMSG " + self.channel + " :Something went wrong!\r\n")
 
-			last 			= xml
-
-			xmlmatch 		= re.findall("<entry>.*?<author><name><.*?\[.*?\[(.*?)\]\]>.*?<updated>(.*?)<.*?<published>(.*?)</published>.*?<id>(.*?)</id>.*?<title.*?><.*?\[.*?\[(.*?)\]\]></title>", xml, re.S)
-			name 			= xmlmatch[0][0]
-			updated 		= xmlmatch[0][1]
-			published 		= xmlmatch[0][2]
-			link 			= HTMLParser.HTMLParser().unescape(xmlmatch[0][3])
-			title 			= HTMLParser.HTMLParser().unescape(xmlmatch[0][4])
-
-
-
-			for ch in self.rssChannels:
-				self.irc.send("PRIVMSG " + ch + " :" + name + " - " + title + " : " + link + "\r\n")
+			time.sleep(1)
 
 
-	def loop(self):
-		while 1:
-			data 		= self.recieve(1)
-			self.ircData 	= data
+#============================================================================================================		
+	def run(self, showlog=0):
+		inText 		= "Something to start with"
+	
+		while inText:
 
-			file 			= open( dataFile )
-			fdata 			= file.read()
-			fdata 			= json.loads( fdata )
-			self.chatObject 	= fdata["chat"]
-			self.ontextObject	= fdata["commands"]
-			self.weapons 		= fdata["weapons"]
-			self.botcmd 		= fdata["config"]["botcmd"]
-			#======================= On message stuff =============================
-			try:			
-				for text in self.ontextObject["ontext"]:
-					if text.replace("&botname", self.botName).replace("&server", self.ircData[6:] ) in data:
-						self.callCommand(self.ontextObject["ontext"][text])
-			except UnicodeDecodeError:
-				continue
-			#======================================================================
+			inText 		= self.irc.recv(1024)
+			if showlog:
+				print( inText )
+			
+			self.ircData 	= inText
+			sjbotData 	= json.loads( open( dataFile ).read() )
+			commands 	= sjbotData["commands"]
+			server 		= sjbotData["data"]["server"]
+			port 		= sjbotData["data"]["port"]
+			botName 	= sjbotData["data"]["name"]
+			botcmd 		= sjbotData["data"]["cmd"]
+			channelList 	= sjbotData["data"]["channels"]
+			chatObject 	= sjbotData["chat"]
+			weapons 	= sjbotData["weapons"]
+			owners		= sjbotData["data"]["owners"]
 
+			self.onText(inText)	
 
-			dt 				= re.match(":(?P<User>.*?)!~?(?P<Host>.*?)\s(?P<Command>.*?)\s(?P<Channel>.*?)\s:(?P<Message>.*)\\r", data)
+			dt 				= re.match(":(?P<User>.*?)!~?(?P<Host>.*?)\s(?P<Command>.*?)\s(?P<Channel>.*?)\s:(?P<Message>.*)\\r", inText)
 
 			if dt:
 				self.user 		= dt.group("User")
@@ -154,70 +184,31 @@ class sjBot(object):
 				self.channel 		= dt.group("Channel")
 
 				self.message 		= dt.group("Message")
+
+
+				isOwner 	= 0
+		
+				self.irc.send("WHOIS " + self.user + "\r\n")
+				userData 	= self.irc.recv(1024)
+
+
+				print( userData )
 				
 				if self.channel == self.botName:
 					self.channel = self.user
 
-
-				#====================== Chat stuff ====================================
-				try:				
-					user 			= self.user
-					message 		= self.message
-					for x in self.chatObject:	
-						for v in self.chatObject[x]["text"]:
-							if ( v.replace("&botname", self.botName).lower() in message.lower() ):
-								if any( b == user.lower()  for b in self.chatObject[x]["response"] ):
-									response 		= random.choice( self.chatObject[x]["response"][user.lower()] ).replace("&user", user )				
-								else:
-									response 		= random.choice( self.chatObject[x]["response"]["__default__"] ).replace("&user", user )
-								if ( response == "__notext__"):
-									continue
-								self.irc.send("PRIVMSG " + self.channel + " :" + response + "\r\n")
+				
+				try:
+					self.onChat(inText)
+					self.isCommand(inText)
 				except UnicodeDecodeError:
 					continue
-				#======================================================================
+				
+				
+			
+		print("Closed connection. Restarting.")
+		bot 			= sjBot()
+#============================================================================================================
 
 
-				#======================= Commands =============================
-				commands 	= self.message.split('||')
-				for cm in commands:
-					
-
-					self.params 	= cm.split(' ')
-
-					index 		= 0
-
-					for dex in self.params:
-						if self.botcmd in dex:
-							rIndex 	= index
-
-						index 		= index + 1
-						
-
-					try:
-						self.fullData 	= self.params[ rIndex + len(self.botcmd):]
-						checkCmd 		= self.params[ rIndex ]
-						command 		= self.params[ rIndex ]
-						self.paramData 		= " ".join(self.params[rIndex + len(self.botcmd):])
-					except:
-						checkCmd 		= self.params[0]
-						command 		= self.params[0]
-						self.fullData 		= self.params[len(self.botcmd):]
-						self.paramData 		= " ".join(self.params[len(self.botcmd):])
-
-
-					if checkCmd[:len(self.botcmd)] == self.botcmd:
-						command = command[len(self.botcmd):].lower()
-					
-						for name in self.ontextObject["commands"]:
-							for cmd in self.ontextObject["commands"][name]["cmd"]:
-								if command == cmd:
-									Parent, Child 	= Pipe()
-									thread 		= Process(target=self.callCommand, args=(self.ontextObject["commands"][name]["file"],name,Child) )
-									thread.daemon 	= True
-									thread.start()
-									output 		= Parent.recv()
-									self.owners 	= output["owners"]
-				#=================================================================
-
-sjBot 		= sjBot()
+bot 		= sjBot()
