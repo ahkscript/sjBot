@@ -1,17 +1,19 @@
 params 		= self.fullData
-output 		= ""
+oData 		= ""
 
 print( params )
 
 if len( params ) == 0:
-	output 		= "Here is a list of commands"
-	for commands in self.ontextObject["commands"]:
-		if self.ontextObject["commands"][commands]["owner"] == 1:
-			output 		= output + " | \x02" + commands + "\x02" 
+	oData		= "Here is a list of commands"
+	for commands in self.commands:
+		if self.commands[commands]["owner"] == 1 and not any( c == self.host  for c in self.owners ):
+			continue
 		else:
-			output 		= output + " | " + commands  
+			oData 		= oData + " | " + commands
 else:
 
-	for c in self.ontextObject["commands"]:
-		if any( v == self.fullData[0]  for v in self.ontextObject["commands"][c]["cmd"] ):
-			output 		= self.ontextObject["commands"][c]["help"]
+	for c in self.commands:
+		if any( v == self.fullData[0]  for v in self.commands[c]["cmd"] ):
+			oData 		= self.commands[c]["help"]
+
+output 		= {"text": oData, "channel": "__default__"}
