@@ -185,14 +185,6 @@ class sjBot():
 
 				self.message 		= dt.group("Message")
 
-
-				isOwner 	= 0
-		
-				self.irc.send("WHOIS " + self.user + "\r\n")
-				userData 	= self.irc.recv(1024)
-
-
-				print( userData )
 				
 				if self.channel == self.botName:
 					self.channel = self.user
