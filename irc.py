@@ -16,11 +16,14 @@ class _irc():
 		self.irc.send(b"USER " + botName + b" " + botName + b" " + botName + b" :Uptone Software\r\n")
 		return 0
 
-	def waitUntil(self, untilText ):
+	def waitUntil(self, untilText, timeout ):
 		checkText 		= ""
+		startTime 		= time.time()
+		waitUntil	 	= time.time() + 10
 
-		while( untilText not in checkText ):
+		while( untilText not in checkText or startTime < waitUntil ):
 			checkText 	= self.recv(1)
+			startTime 	= time.time()
 		
 		return 0
 
