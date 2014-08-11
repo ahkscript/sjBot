@@ -7,7 +7,6 @@ class _commands():
 	
 
 	def __init__(self, irc, botCmd):
-		print("Commands module imported.")
 		self.botCmd 	= botCmd
 		self.irc 	= irc
 		self.user 	= ""
@@ -166,10 +165,15 @@ class _commands():
 	
 		response	= json.loads( htmlData )
 
+		try:
+			title 		= response["responseData"]["results"][0]["titleNoFormatting"]
+			url 		= response["responseData"]["results"][0]["url"]
+		except KeyError:
+			return ["Could not get the data for " + ' '.join( params ) ]
 
-		title 		= response["responseData"]["results"][0]["titleNoFormatting"]
-		url 		= response["responseData"]["results"][0]["url"]
-		
+		print( title )		
+
+
 		for more in response["responseData"]["results"][1:]:
 			self.more.append( urllib.parse.unquote( more["titleNoFormatting"] ) + " - " + more["url"] )
 
@@ -306,6 +310,12 @@ class _commands():
 
 		term 		= str( jsonData["term"] )
 		definition 	= str( jsonData["definition"] ).split('\r')
+
+		print( len( definition ) )
+
+		if len( definition ) == 1:
+			return [ term + " - " + str( jsonData["definition"] ) ]
+
 		odef 		= []
 		for x in definition:
 			odef.append( x.replace('\\',"") )		
@@ -313,6 +323,16 @@ class _commands():
 		returnData	= [term + " :"] + odef
 
 		return 	returnData
+
+
+	def hug(self, params ):
+		if len( params ) == 0:
+			user 		= self.user
+		else:
+			user 		= params[0]
+
+		responses 		= [["Aww, does someone need a hug?", "\x01ACTION hugs " + user + "\x01"], "\x01ACTION hugs " + user + " and whispers 'Its okay'\x01"]
+		return random.choice( responses )
 
 
 	def stop(self, params ):
@@ -333,5 +353,6 @@ commands 		= {
 	"leave": {"ali": ["leave", "l"], "run": _commands.leave, "owner": 1, "help": "This command will make the bot leave channel/s. &botcmdleave <channel 1> [channel 2] [channel 3] etc." },
 	"dance": {"ali": ["dance", "d", "move_yo_booty"], "run": _commands.dance, "owner": 0, "help": "This command will make the bot dance, &botcmddance"},
 	"imdb": {"ali": ["movie", "imdb"], "run": _commands.imdb, "owner": 0, "help": "This command will search for a movie. &botcmdimdb <movie name>" },
-	"ud": {"ali": ["dict", "define", "ud"], "run": _commands.ud, "owner": 0, "help": "This command will define a term. &botcmdud <term>" }
+	"ud": {"ali": ["dict", "define", "ud"], "run": _commands.ud, "owner": 0, "help": "This command will define a term. &botcmdud <term>" },
+	"hug": {"ali": ["hug"], "run": _commands.hug, "owner": 0, "help": "This command will make the bot hug a user. &botcmdhug [user]." }
 }
