@@ -3,13 +3,12 @@ import time
 
 class _irc():
 	
-	def __init__(self):
+	def __init__(self, network, port):
 		print( "IRC module imported." )
 		self.irc 	= socket.socket( socket.AF_INET, socket.SOCK_STREAM )
-
-
-	def joinserver(self, network, port, botName ):
 		self.irc.connect((network, port))
+
+	def joinserver(self, botName ):
 		botName		= bytes( botName, 'utf-8' )
 		self.botName 	= botName
 		self.irc.send(b"NICK " + botName + b" \r\n")
@@ -19,12 +18,19 @@ class _irc():
 	def waitUntil(self, untilText, timeout ):
 		checkText 		= ""
 		startTime 		= time.time()
-		waitUntil	 	= time.time() + 10
+		waitUntil	 	= time.time() + 20
+		print("Waiting for login, or timeout")
 
-		while( untilText not in checkText or startTime < waitUntil ):
-			checkText 	= self.recv(1)
+		while( 1 ):
+			time.sleep(1)
+			if untilText in checkText or startTime > waitUntil:
+				break
+			checkText 	= self.recv(0)
 			startTime 	= time.time()
+			print( str( startTime ) + " " + str( waitUntil ) )
 		
+
+		print("Done. Joining channels")
 		return 0
 
 
