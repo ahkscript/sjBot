@@ -1,5 +1,6 @@
 import random
 import urllib.request
+import urllib.parse
 import json
 import sys
 
@@ -7,13 +8,15 @@ class _commands():
 	
 
 	def __init__(self, irc, botCmd):
-		self.botCmd 	= botCmd
-		self.irc 	= irc
-		self.user 	= ""
-		self.host 	= ""
-		self.channel 	= ""	
-		self.more 	= []
-		self.ownerList 	= ["~Sjc1000"]
+		self.botCmd 		= botCmd[0]
+		self.irc 		= irc
+		self.user 		= ""
+		self.host 		= ""
+		self.channel 		= ""
+		self.more 		= []
+		self.ownerList 		= ["~Sjc1000"]
+		self.onNoCommand 	= "ahk"
+		self.lastMessage 	= ""
 
 
 	def urlDownload(self, url ):
@@ -25,6 +28,9 @@ class _commands():
 			return "__notext__"
 
 		return response.read().decode('utf-8')
+
+	def shortenUrl(self, url ):
+		urlData 	= self.urlDownload('https://www.googleapis.com/urlshortener/v1/' + url )
 
 
 	def isOwner(self, user ):
@@ -40,10 +46,10 @@ class _commands():
 
 	def callCommand(self, params ):
 		command 		= params[0]
+		cmdNocaps 		= params[0]
 		self.user		= params[1]
 		self.host 		= params[2]
 		self.channel		= params[3]
-		
 		self.commandList 	= []
 		params 			= params[4]
 		index 			= 0
@@ -58,7 +64,7 @@ class _commands():
 		
 
 		isOwner 		= self.isOwner(self.user)
-
+		self.isOwner 		= isOwner
 
 		for cmd in commands:
 			for ali in commands[cmd]['ali']:
@@ -66,8 +72,8 @@ class _commands():
 
 		
 		if all( cmd != command  for cmd in self.commandList ):
-			params 		= [command] + params
-			self.irc.pMessage( self.channel, commands["ahk"]["run"](self, params) )
+			params 		 = [cmdNocaps] + params
+			self.irc.pMessage( self.channel, commands[self.onNoCommand]["run"](self, params)  )
 			return 0
 
 		for cm in commands:
@@ -78,8 +84,11 @@ class _commands():
 						self.irc.pMessage( self.channel, ["You are not a registered owner.", "If you are, try logging into freenode then using the command again."] )			
 						return 0
 					sendToChannel 		= commands[cm]["run"](self, params )
+
+
 					if sendToChannel == "__notext__":
 						return 0
+
 					self.irc.pMessage( self.channel, sendToChannel )
 		return 0
 
@@ -105,12 +114,12 @@ class _commands():
 		return "__notext__"
 
 
-	def ahksearch(self, params): #http://ajax.googleapis.com/ajax/services/search/web?v=1.0&q=query&009062493091172133168:_o2f4moc9ce
+	def ahksearch(self, params): #http://ajax.googleapis.com/ajax/services/search/web?v=1.0&q=query&cx=009062493091172133168:_o2f4moc9ce
 		try:		
 			self.more 	= []
 	
 			if len( params ) == 0:
-				return "This command needs more params"
+				return [ commands["ahk"]["help"].replace("&botcmd", self.botCmd ) ]
 		
 			search 		= '%20'.join( params ).replace("\r\n", "")
 		
@@ -120,7 +129,7 @@ class _commands():
 
 			response	= json.loads( htmlData )
 			title 		= response["responseData"]["results"][0]["titleNoFormatting"]
-			url 		= response["responseData"]["results"][0]["url"]
+			url 		= urllib.parse.unquote( response["responseData"]["results"][0]["url"] )
 
 			for more in response["responseData"]["results"][1:]:
 				self.more.append( urllib.parse.unquote( more["titleNoFormatting"] ) + " - " + more["url"] )
@@ -144,6 +153,8 @@ class _commands():
 		commandList 		= "Here is a list of commands"
 		
 		for cm in commands:
+			if commands[cm]["owner"] == 1 and self.isOwner == 0:
+				continue
 			commandList 	= commandList + " | " + cm
 
 		return ["Use " + self.botCmd + "help [command name] for more info.", commandList]
@@ -154,7 +165,7 @@ class _commands():
 		self.more 	= []
 
 		if len( params ) == 0:
-			return "This command needs more params"
+			return [ commands["google"]["help"].replace("&botcmd", self.botCmd ) ]
 		
 		search 		= '%20'.join( params )
 		
@@ -167,7 +178,7 @@ class _commands():
 
 		try:
 			title 		= response["responseData"]["results"][0]["titleNoFormatting"]
-			url 		= response["responseData"]["results"][0]["url"]
+			url 		= urllib.parse.unquote( response["responseData"]["results"][0]["url"] )
 		except KeyError:
 			return ["Could not get the data for " + ' '.join( params ) ]
 
@@ -185,7 +196,7 @@ class _commands():
 		#http://api.openweathermap.org/data/2.5/weather?q=London,UK
 
 		if len( params ) == 0:
-			return "This command needs more params"
+			return [ commands["weather"]["help"].replace("&botcmd", self.botCmd ) ]
 
 		search 		= '%20'.join( params )
 		htmlData 	= self.urlDownload("http://api.openweathermap.org/data/2.5/weather?units=metric&q=" + search )
@@ -248,7 +259,7 @@ class _commands():
 
 
 		if len( params ) == 0:
-			return ["Please specify a person to kill.", commands["kill"]["help"].replace("&botcmd", self.botCmd ) ]
+			return [ commands["kill"]["help"].replace("&botcmd", self.botCmd ) ]
 
 		if len( params ) < 2:
 			weapon 		= random.choice( weapons )
@@ -277,13 +288,12 @@ class _commands():
 
 	def imdb(self, params ):
 		if len( params ) == 0:
-			return [ "Please specify a movie to search for.", commands["imdb"]["help"].replace("&botcmd", self.botCmd ) ]
+			return [  commands["imdb"]["help"].replace("&botcmd", self.botCmd ) ]
 
 
 		search 		= '%20'.join( params )
 		htmlData 	= self.urlDownload("http://www.omdbapi.com/?t=" + search )
 		responseData 	= json.loads( htmlData )
-		print( responseData )
 
 		try:
 			title 		= responseData["Title"]
@@ -293,12 +303,12 @@ class _commands():
 		except KeyError:
 			return ["Could not find the movie info for " + ' '.join( params )]
 
-		return [ title + " (" + year + ") - " + plot, url ]
+		return [ title + " (" + year + ") - " +  url ]
 
 
 	def ud(self, params ):
 		if len( params ) == 0:
-			return ["Please specify a word to search the Urban Dictionary for.", commands["ud"]["help"].replace("&botcmd", self.botCmd ) ]
+			return [commands["ud"]["help"].replace("&botcmd", self.botCmd ) ]
 
 		search 		= '%20'.join( params )
 		url 		= "http://urbanscraper.herokuapp.com/define/" + search
@@ -320,7 +330,7 @@ class _commands():
 		for x in definition:
 			odef.append( x.replace('\\',"") )		
 		
-		returnData	= [term + " :"] + odef
+		returnData	= [term + " : " + definition[0], jsonData["url"] ] 
 
 		return 	returnData
 
@@ -333,6 +343,29 @@ class _commands():
 
 		responses 		= [["Aww, does someone need a hug?", "\x01ACTION hugs " + user + "\x01"], "\x01ACTION hugs " + user + " and whispers 'Its okay'\x01"]
 		return random.choice( responses )
+
+
+	def about(self, params ):
+		return "Hi, i am a helper bot made by Sjc1000 ( Steven J. Core ). Please use " + self.botCmd + "help for a list of commands."
+
+	
+
+	def say(self, params ):
+		if len( params ) == 0:
+			return [ commands["say"]["help"].replace("&botcmd", self.botCmd ) ]
+
+		if "#" in params[0]:
+			self.channel 	= params[0]
+			if '/me' in params[1]:
+				return str( ' '.join( params[1:] ) ).replace("/me", "\x01ACTION") + "\x01"
+			return str( ' '.join( params[1:] ) )
+
+		if '/me' in params[0]:
+				return str( ' '.join( params[0] ) ).replace("/me", "\x01ACTION") + "\x01"
+
+		return str( ' '.join( params ) )
+
+
 
 
 	def stop(self, params ):
@@ -354,5 +387,7 @@ commands 		= {
 	"dance": {"ali": ["dance", "d", "move_yo_booty"], "run": _commands.dance, "owner": 0, "help": "This command will make the bot dance, &botcmddance"},
 	"imdb": {"ali": ["movie", "imdb"], "run": _commands.imdb, "owner": 0, "help": "This command will search for a movie. &botcmdimdb <movie name>" },
 	"ud": {"ali": ["dict", "define", "ud"], "run": _commands.ud, "owner": 0, "help": "This command will define a term. &botcmdud <term>" },
-	"hug": {"ali": ["hug"], "run": _commands.hug, "owner": 0, "help": "This command will make the bot hug a user. &botcmdhug [user]." }
+	"hug": {"ali": ["hug"], "run": _commands.hug, "owner": 0, "help": "This command will make the bot hug a user. &botcmdhug [user]." },
+	"about": {"ali": ["about", "info"], "run": _commands.about, "owner": 0, "help": "This command will give info about the bot. &botcmdabout . " },
+	"say": {"ali": ["say", "talk"], "run": _commands.say, "owner": 1, "help": "This command will make the bot say something. &botcmdsay [what to say]. "}
 }
