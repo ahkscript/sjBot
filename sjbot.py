@@ -123,12 +123,12 @@ class plugin:
 class sjBot():
 
 	# variables ================================
-	botName 		= "sjBots"
+	botName 		= "sjBot"
 	server			= "irc.freenode.net"
 	port 			= 6667
 	botCmd 			= ["."]
 	ownerList 		= ["unafiliated/sjc1000"]
-	channelList 		= ["#Sjc_Bot"]
+	channelList 		= ["#Sjc_Bot", "#ahk", "#ahkscript", "#batcave"]
 	password 		= open(os.path.dirname(os.path.realpath(__file__)) + "/password", 'r').read()
 	#===========================================
 
