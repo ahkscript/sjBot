@@ -1,0 +1,39 @@
+import re
+import urllib.request
+import json
+
+def urlDownload( url ):
+		try:
+			response 	= urllib.request.urlopen(url) 
+		except UnicodeEncodeError:
+			return -1
+		except:
+			return -2
+
+		return response.read().decode('utf-8')
+
+def onPRIVMSG(this, message ):
+	#AIzaSyAJQbRWt3p4S5sAiHL_iiot87KcbEa0dsQ  - API key
+	message = message.split(' ')
+	reg = re.search("watch\?v=(.*?)(\&|\s+|$)", ' '.join( message[2:] ) )
+	try:	
+		url = reg.group(1)
+	except AttributeError:
+		return 0
+
+	rep = re.findall('\&(\w+)',' '.join(message[2:]))
+
+	youtubedata = urlDownload( 'https://www.googleapis.com/youtube/v3/videos?id=' + url + '&key=AIzaSyAJQbRWt3p4S5sAiHL_iiot87KcbEa0dsQ&part=snippet,contentDetails,statistics,status' )
+	response = json.loads( youtubedata )
+	time = response['items'][0]['contentDetails']['duration'][2:].replace("M", ":").replace("S", "").replace("H", ":").split(":")
+	for index, val in enumerate(time):
+		time[index] = '%02d' % (int(val),)
+	output = '[' + message[0].split("!")[0][1:] + "'s link] " + response['items'][0]['snippet']['title'] + " - " + ':'.join(time)
+	
+	for x in rep:
+		try:
+			output = output + " - " + x + ": " + response['items'][0]['statistics'][x]
+		except AttributeError:
+			pass
+	
+	this.irc.privmsg(message[2], output )
