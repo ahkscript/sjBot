@@ -6,12 +6,13 @@ import os
 
 def urlDownload( url ):
 	try:
-		response 	= urllib.request.urlopen(url) 
-	except UnicodeEncodeError:
+		response = urllib.request.urlopen(url) 
+		response_data = response.read().decode('utf-8')
+	except UnicodeDecodeError:
 		return -1
 	except:
 		return -2
-	return response.read().decode('utf-8')
+	return response_data
 
 def on001(this, params):
 	with open(os.path.dirname(os.path.realpath(__file__)) + '/old_events', 'w') as my_file:
@@ -30,7 +31,7 @@ def onUPDATE(this, params):
 
 	data = urlDownload(repo + access_token)
 	events = json.loads(data)
-	if old_events != [''] and old_events != events:
+	if old_events != [] and old_events != events:
 		event_data = [x for x in events if x not in old_events]
 		for ev in event_data:
 			try:
