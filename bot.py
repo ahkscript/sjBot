@@ -6,6 +6,7 @@ import sys
 import os
 import json
 import random
+import urllib.request
 
 class bot():
 	botname = 'sjBot'
@@ -16,7 +17,9 @@ class bot():
 	ignorelist = ['geekbot', 'forumbot']
 	ignorecommands = [',', 'n', 'r', '.', '::']
 	default_dir = os.path.dirname(os.path.realpath(__file__))
-	channel_list = ['#Sjc_Bot',"#ahkscript", "#ahk", "#batcave"]
+	commands_dir = default_dir + '/commands/'
+	plugins_dir = default_dir + '/plugins/'
+	channel_list = ['#Sjc_Bot', "#ahkscript", "#ahk"]
 
 	def __init__(self):
 		self.thread = threads.thread()
@@ -24,14 +27,30 @@ class bot():
 		self.irc.ident(self.botname)
 		self.commands = plugins.plugin(self.default_dir + '/commands/')
 		self.plugins = plugins.plugin(self.default_dir + '/plugins/')
-		self.thread.add_task('update_plugins', [10], self)
+		self.thread.add_task('update_plugins', [20], self)
+		
+		with open(self.default_dir + '/keys') as my_file:
+			self.keys = json.loads(my_file.read())
 
 	def update_plugins(self, timeout):
 		while True:
 			time.sleep(timeout)
 			self.commands.load_plugins()
 			self.plugins.load_plugins()
+			self.thread.add_task('call_plugin', ['UPDATE', 'data'], self)
 		return 0
+
+	def download_url(self, url):
+		try:
+			response = urllib.request.urlopen(url)
+			response_data = response.read().decode('utf-8')
+		except UnicodeDecodeError:
+			raise UnicodeDecodeError('response.read().decode()')
+		return response_data
+	
+	def shorten_url(self, url):
+		return self.download_url('https://api-ssl.bitly.com/v3/shorten?access_token=' + self.keys['bitly'] + '&format=txt&Longurl=' + url)
+		
 
 	def main_loop(self):
 		self.previous_data = b''
@@ -39,14 +58,17 @@ class bot():
 			try:
 				recieved = self.irc.recv()
 			except UnicodeDecodeError:
-				print('! Decode Error.')
+				print('! Decode Error. Skipping current data and waiting for more.')
 				continue
 			if len(recieved) == 0:
 				print('! Host closed the connection, shuting down sockets and rebooting.')
 				self.irc.stop()
 				break
 			if recieved.endswith(b'\r\n'):
-				self.handle_data(self.previous_data + recieved)
+				try:
+					self.handle_data(self.previous_data + recieved)
+				except UnicodeDecodeError:
+					continue
 				self.previous_data = b''
 			else:
 				self.previous_data = self.previous_data + recieved
@@ -78,11 +100,16 @@ class bot():
 	def on376(self, host, botname, *junk):
 		with open(self.default_dir + '/password', 'r') as my_file:
 			password = my_file.read()
-			self.irc.send('PRIVMSG NickServ :Identify ' + self.botname + ' ' + password)
+			self.irc.privmsg('NickServ', 'Identify ' + self.botname + ' ' + password)
 		return 0
 
 	def on396(self, host, botname, newhost, *junk):
 		self.irc.join(self.channel_list)
+		return 0
+
+	def on433(self, server, a, nickname, *junk):
+		self.botname = nickname + '_'
+		self.irc.send('NICK ' + self.botname)
 		return 0
 
 	def onNOTICE(self, host, botname, *message):
@@ -130,11 +157,6 @@ class bot():
 				self.call_command(command[0].lower(), command[1:], host.split('!')[0], channel, host)
 				return 0
 		return 0
-
-	def on433(self, server, a, nickname, *junk):
-		self.botname = nickname + '_'
-		self.irc.send('NICK ' + self.botname)
-		return 0
 	
 	def call_command(self, command, params, user, channel, host):
 		if channel == self.botname:
@@ -148,9 +170,9 @@ class bot():
 			if self.commands.plugins[command].metaData['owner'] == 1 and self.is_owner(host) == 0:
 				self.irc.privmsg(channel, 'Sorry ' + user + ', you are not permitted to use that command.')
 				return 0
-			response_data = self.commands.run(command, [(command, self.commands.plugins, self.botcmd, self.is_owner(host), self.irc), user, host, channel, params])
+			response_data = self.commands.run(command, [(command, self.commands.plugins, self.botcmd, self.is_owner(host), self.irc, self), user, host, channel, params])
 		else:
-			response_data = self.commands.run('ahk', [(command, self.commands.plugins, self.botcmd, self.is_owner(host), self.irc), user, host, channel, [command] + params])
+			response_data = self.commands.run('ahk', [(command, self.commands.plugins, self.botcmd, self.is_owner(host), self.irc, self), user, host, channel, [command] + params])
 
 		if isinstance(response_data, int):
 			return 0
@@ -175,11 +197,11 @@ class bot():
 
 
 
-channels = ['']
+channels = []
 if __name__ == '__main__':
 	while True:
 		sjBot = bot()
-		if channels != ['']:
+		if channels != []:
 			sjBot.channel_list = channels
 		channels = sjBot.main_loop()
 		time.sleep(10)
