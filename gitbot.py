@@ -20,7 +20,7 @@ def on433(bot, host, ast, nickname, *params):
 	bot.irc.nick(nickname + '_')
 
 def onITERATE(this, *params):
-	with open('old_events', 'r') as my_file:
+	with open(default_dir + '/old_events', 'r') as my_file:
 		try:
 			old_events = json.loads( my_file.read() )
 		except ValueError:
