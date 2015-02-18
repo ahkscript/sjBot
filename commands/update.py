@@ -1,5 +1,7 @@
-metaData 	= {"help": ["This command give a link to the latest maintained versoin of AHK.", "Usage: &botcmdupdate"], "aliases": ["update", "u", "latest", "version"], "owner": 0 }
+import urllib.request
+meta_data 	= {"help": ["This command give a link to the latest maintained versoin of AHK.", "Usage: &botcmdupdate"], "aliases": ["update", "u", "latest", "version"], "owner": 0 }
 
 
-def execute(command, user, host, channel, params ):
-	return "The latest maintained versoin can be found at - http://ahkscript.org/download/ahk-install.exe"
+def execute(parent, command, user, host, channel, params ):
+	version = parent.download_url('http://ahkscript.org/download/1.1/version.txt')
+	return {'Status': 0, 'Text': "The latest AutoHotkey installer ( v" + version + " ) can be found at - " + parent.shorten_url('http://ahkscript.org/download/ahk-install.exe'), 'Error': 'No Error'}

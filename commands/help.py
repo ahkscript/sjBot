@@ -1,20 +1,14 @@
-metaData 	= { "help": ["Gives help on commands.","Usage: &botcmdhelp [command name]"], "aliases": ["help", "shelp"], "owner": 0 }
+meta_data 	= { "help": ["Gives help on commands.","Usage: &botcmdhelp [command name]"], "aliases": ["help", "shelp"], "owner": 0 }
 
 
-def execute(command, user, host, channel, params ):
-	commands 		= command[1]
-	output 			= []
-	
-	if command[3] == 1:
-		for x in commands:
-			if commands[x].metaData["owner"] == 1:
-				commands.remove(x)
-	
+def execute(parent, commands, user, host, channel, params ):
+	output = []
+
 	if len( params ) > 0:
 		for z in commands:
-			if any( params[0] == cmd for cmd in commands[z].metaData["aliases"]):
-				return commands[z].metaData["help"]
+			if any( params[0] == cmd for cmd in commands[z].meta_data["aliases"]):
+				return {'Status': 0, 'Text': commands[z].meta_data["help"], 'Error': 'No Error'}
 			else:
-				return "Command not found"
+				continue
 	
-	return ["Please use " + command[2][0] + "help [command name], for more info.", "Here is a list of commands. " + ", ".join(sorted(commands)) + "."]
+	return {'Status': 0, 'Text': ["Please use " + parent.botcmd + "help [command name], for more info.", "Here is a list of commands. " + ", ".join(sorted(commands)) + "."], 'Error': 'No Error'}

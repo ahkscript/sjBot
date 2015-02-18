@@ -7,6 +7,8 @@ class client():
 		self.irc.connect((server, port))
 
 	def send(self, data):
+		if data == ' ':
+			return -1
 		self.irc.send(bytes(data, 'utf-8') + b'\r\n')
 		print('< ' + data)
 		return 0
