@@ -9,9 +9,11 @@ import json
 import urllib.request
 
 class _bot():
-	def __init__(self, network, port, prefix='on'):
+	def __init__(self, network, port, parent_dir, prefix='on'):
+		self.parent_name = parent_dir.split('/')[-1]
+		self.parent_dir = parent_dir
+		self.parent = imp.load_source( self.parent_name, self.parent_dir )
 		self.irc = irc.client(network, port)
-		self.parent = sys.modules['__main__']
 		self.running = 1
 		self.thread = threads.thread(10)
 		self.prefix = prefix
@@ -27,6 +29,7 @@ class _bot():
 		while True:
 			time.sleep(30)
 			self.call_parent('ITERATE', 'iterate')
+			self.parent = imp.load_source( self.parent_name, self.parent_dir )
 			self.thread.add_task('call_parent', ['ALL', ('ITERATE', 'iterate')], self)
 		return -1
 	
