@@ -15,7 +15,7 @@ def urlDownload( url ):
 	return response.read().decode('utf-8')
 
 
-def execute(parent, command, user, host, channel, params ):
+def execute(parent, commands, irc, user, host, channel, params):
 	if '&' in params:
 		search = ' '.join( params ).split('&')[0]
 	else:
@@ -30,4 +30,4 @@ def execute(parent, command, user, host, channel, params ):
 		output = ''.join( ' '.join( params ).split('&')[1] ).format( **weather )
 	else:
 		output = 'The weather for {city[name]} is {description} with a temperature of {temp[current][celsius]}C ({temp[current][fahrenheit]}F).'.format( **weather)
-	return {'Status': 0, 'Text': output, 'Error': 'No Error'}
+	return [output]

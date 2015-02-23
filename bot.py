@@ -1,101 +1,87 @@
-import irc
-import threads
-import os
-import sys
-import imp
+import socket
+import threading
 import time
-from os import listdir
-import json
-import urllib.request
 
-class _bot():
-	def __init__(self, network, port, parent_dir, prefix='on'):
-		self.parent_name = parent_dir.split('/')[-1]
-		self.parent_dir = parent_dir
-		self.parent = imp.load_source( self.parent_name, self.parent_dir )
-		self.irc = irc.client(network, port)
-		self.running = 1
-		self.thread = threads.thread(10)
-		self.prefix = prefix
-		self.default_dir = os.path.dirname(os.path.realpath(__file__))
-		
-		with open(self.default_dir + '/keys') as my_file:
-			self.keys = json.loads( my_file.read() )
-		
-		self.call_parent('START', '')
-		self.thread.add_task('iterate', '', self)
+class ircBot():
+	def __init__(self, network, port, parent):
+		self.parent = parent
+		self.previous_data = b''
+		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.socket.connect((network,port))
 	
-	def iterate(self):
+	def send(self, data, prefix='', suffix='\r\n', star=''):
+		self.socket.send(bytes(prefix + data + suffix, 'utf-8'))
+		print('< ' + prefix + data.replace(star, '*' * len(star)) + suffix.replace('\r\n', ''))
+		return 0
+	
+	def privmsg(self, channel, data):
+		self.send('PRIVMSG ' + channel + ' :' + data)
+		return 0
+	
+	def join(self, channellist):
+		if isinstance(channellist, str):
+			channellist = [channellist]
+		for channel in channellist:
+			self.send('JOIN ' + channel)
+		return 0
+	
+	def ident(self, nickname, user, host, realname):
+		self.send('NICK ' + nickname)
+		self.send('USER ' + ' '.join([nickname, user, host]) + ' :' + realname)
+		return 0
+	
+	def iterate(self, timeout=30):
 		while True:
-			time.sleep(30)
-			self.call_parent('ITERATE', 'iterate')
-			self.parent = imp.load_source( self.parent_name, self.parent_dir )
-			self.thread.add_task('call_parent', ['ALL', ('ITERATE', 'iterate')], self)
+			if hasattr(self.parent, 'onITERATE'):
+				function = getattr(self.parent, 'onITERATE')
+				data_thread = threading.Thread(target=function)
+				data_thread.daemon = True
+				data_thread.start()
+			
+			time.sleep(timeout)
 		return -1
 	
-	def call_parent(self, module, params):
-		if not hasattr(self.parent, self.prefix + module):
-			return -1
-		return getattr(self.parent, self.prefix + module)(self, *params)
-	
-	def ident(self, username):
-		self.irc.ident(username)
-	
-	def shorten_url(self, url):
-		return self.download_url('https://api-ssl.bitly.com/v3/shorten?access_token=' + self.keys['bitly'] + '&format=txt&Longurl=' + url)
-		
-	def download_url(self, url):
-		try:
-			response = urllib.request.urlopen(url)
-			response_data = response.read().decode('utf-8')
-		except UnicodeDecodeError:
-			raise UnicodeDecodeError('response.read().decode()')
-		return response_data
-	
-	def main_loop(self):
-		self.previous_data = b''
+	def data_loop(self):
 		while True:
-			recieved = self.irc.recv()
-			if len(recieved) == 0:
-				self.call_parent('onQUIT', 'No Data')
-				self.irc.stop()
+			recv_data = self.socket.recv(1024)
+			if len(recv_data) == 0:
+				self.shutdown()
 				break
-			if recieved.endswith(b'\r\n'):
-				self.handle_data(self.previous_data + recieved)
+			
+			if recv_data.endswith(b'\r\n'):
+				self.handle_data(self.previous_data + recv_data)
 				self.previous_data = b''
 			else:
-				self.previous_data = self.previous_data + recieved
+				self.previous_data = self.previous_data + recv_data
 		return -1
+	
+	def shutdown(self):
+		return 0
 	
 	def handle_data(self, data):
 		try:
 			data = data.decode('utf-8')
 		except UnicodeDecodeError:
-			return -1
-		
-		lines = data.split('\r\n')
-		for line in lines:
+			return 0
+		for line in data.split('\r\n'):
 			if line == '':
 				continue
-			print('> ' + line) 
+			print('> ' + line)
 			split = line.split(' ')
-			if split[0] == 'PING':
-				self.irc.pong(split[1][1:])
 			
-			if len(split) > 2:
-				params = [ split[0][1:] ] + split[2:]
-				self.thread.add_task('call_parent', [split[1], params], self)
-				self.thread.add_task('call_parent', ['ALL', (split[1], params)], self)
+			if split[0] == 'PING':
+				self.send('PONG ' + split[1][1:])
+			
+			if hasattr(self.parent, 'on' + split[1]):
+				params = [split[0]] + split[2:]
+				function = getattr(self.parent, 'on' + split[1])
+				data_thread = threading.Thread(target=function, args=params)
+				data_thread.daemon = True
+				data_thread.start()
+			
+			if hasattr(self.parent, 'onALL'):
+				function = getattr(self.parent, 'onALL')
+				data_thread = threading.Thread(target=function, args=[split])
+				data_thread.daemon = True
+				data_thread.start()
 		return 0
-	
-	def load_plugins(self, folder, prefix):
-		files = listdir(folder)
-		plugins = {}
-		for f in files:
-			if not f.endswith('.py'):
-				continue
-			module_name = f[:f.index('.')]
-			setattr(sys.modules['__main__'], prefix + module_name, imp.load_source(module_name, folder + f))
-			plugins[module_name] = imp.load_source(module_name, folder + f)
-		return plugins
-		

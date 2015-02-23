@@ -3,7 +3,7 @@ import json
 meta_data = {"help": ["This command will show bitcoin prices.","Useage: &botcmdbitcoin"], "aliases": ["btc", "bit", "bitcoin"], "owner": 0 }
 
 
-def execute(parent, command, user, host, channel, params ):
+def execute(parent, commands, irc, user, host, channel, params ):
 	if len( params ) > 0:
 		btype 	= params[0]
 	else:
@@ -16,4 +16,4 @@ def execute(parent, command, user, host, channel, params ):
 		btype 	= "USD"
 	
 	price 		= bitData[btype]["24h"]
-	return {'Status': 0, 'Text': "The current price of the bitcoin is " + str( price ) + " " + btype + ".", 'Error': 'No error'}
+	return ['The current price of the bitcoin is ' + str( price ) + ' ' + btype + '.']
