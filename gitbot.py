@@ -22,7 +22,7 @@ class AutoGitBot(bot.ircBot):
 		self.def_dir = os.path.dirname(os.path.realpath(__file__))
 		self.irc = bot.ircBot(network, port, self)
 		self.irc.ident(self.nickname, self.nickname, self.nickname, 'Uptone Software')
-		with open(self.def_dir + '/old_events', 'r') as mfile:
+		with open(self.def_dir + '/old_events', 'w') as mfile:
 			mfile.write( self.download_url(self.repo + self.keys['github']) )
 		
 		self.irc.data_loop()
@@ -82,7 +82,7 @@ class AutoGitBot(bot.ircBot):
 					match = re.search('https://.*github.com.*', data)
 					if match is not None:
 						data = data.replace(match.group(0), self.shorten_url(match.group(0)))
-					self.irc.privmsg('#Sjc_Bot', data)
+					self.irc.privmsg('#ahkscript', data)
 					
 			with open(self.def_dir + '/old_events', 'w') as wfile:
 					wfile.write(json.dumps(new_data))
