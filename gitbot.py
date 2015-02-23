@@ -3,6 +3,7 @@ import json
 import urllib.request
 import os
 import re
+import time
 
 formats = {'PushEvent': '{actor[login]} pushed {payload[size]} commit[s] to {repo[name]} - https://github.com/{repo[name]}/commits/master',
 		'IssuesEvent': '{actor[login]} {payload[action]} the issue at {repo[name]} - {payload[issue][html_url]}',
@@ -89,4 +90,6 @@ class AutoGitBot(bot.ircBot):
 		return 0
 
 if __name__ == '__main__':
-	gitbot = AutoGitBot('irc.freenode.net', 6667)
+	while True:
+		gitbot = AutoGitBot('irc.freenode.net', 6667)
+		time.sleep(10)

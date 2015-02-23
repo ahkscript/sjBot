@@ -4,9 +4,10 @@ from os import listdir
 import os
 import imp
 import urllib.request
+import time
 
 class sjBot(bot.ircBot):
-	botcmd = '.'
+	botcmd = '`'
 	botname = 'sjBot'
 	def __init__(self, network, port, keyfile='keys'):
 		self.def_dir = os.path.dirname(os.path.realpath(__file__))
@@ -110,4 +111,6 @@ class sjBot(bot.ircBot):
 		return 0
 
 if __name__ == '__main__':
-	sjbot = sjBot('irc.freenode.net', 6667)
+	while True:
+		sjbot = sjBot('irc.freenode.net', 6667)
+		time.sleep(10)
