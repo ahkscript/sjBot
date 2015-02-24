@@ -5,13 +5,6 @@ import os
 import re
 import time
 
-formats = {'PushEvent': '{actor[login]} pushed {payload[size]} commit[s] to {repo[name]} - https://github.com/{repo[name]}/commits/master',
-		'IssuesEvent': '{actor[login]} {payload[action]} the issue at {repo[name]} - {payload[issue][html_url]}',
-		'ForkEvent': '{actor[login] forked the repo {repo[name]} to {payload[forkee][full_name]}.',
-		'IssueCommentEvent': '{actor[login]} commented on the issue {payload[issue][title]} at {repo[name]} - {payload[issue][html_url]}',
-		'WatchEvent': '{actor[login]} starred {repo[name]}',
-		'CreateEvent': '{actor[login]} created a {payload[ref_type]} at {repo[name]} - {payload[repository][html_url]}',
-		'PullRequestEvent': '{actor[login]} {payload[action]} a pull request to {repo[name]} - {payload[pull_request][html_url]}'}
 
 class AutoGitBot(bot.ircBot):
 	nickname = 'AutoGitBot'
@@ -25,7 +18,6 @@ class AutoGitBot(bot.ircBot):
 		self.irc.ident(self.nickname, self.nickname, self.nickname, 'Uptone Software')
 		with open(self.def_dir + '/old_events', 'w') as mfile:
 			mfile.write( self.download_url(self.repo + self.keys['github']) )
-		
 		self.irc.data_loop()
 
 	def on433(self, host, ast, nickname, *params):
@@ -78,16 +70,62 @@ class AutoGitBot(bot.ircBot):
 		if old_events != new_data:
 			event_data = [x for x in new_data if x not in old_events]
 			for ev in event_data:
-				if ev['type'] in formats:
-					data = formats[ev['type']].format(**ev)
-					match = re.search('https://.*github.com.*', data)
-					if match is not None:
-						data = data.replace(match.group(0), self.shorten_url(match.group(0)))
+				if hasattr(self, ev['type']):
+					func = getattr(self, ev['type'])
+					data = func(ev)
 					self.irc.privmsg('#ahkscript', data)
 					
 			with open(self.def_dir + '/old_events', 'w') as wfile:
 					wfile.write(json.dumps(new_data))
 		return 0
+
+	def PushEvent(self, e):
+		user = e['actor']['login']
+		size = e['payload']['size']
+		repo = e['repo']['name']
+		url = self.shorten_url('https://github.com/' + e['repo']['name'] + '/commits/master')
+		message = e['payload']['commits'][0]['message'][:20]
+		return user + ' pushed ' + str(size) + ' commit[s] to ' + repo + ' ' + message + ' - ' + url
+	
+	def IssueEvent(self, e):
+		user = e['actor']['login']
+		action = e['payload']['action']
+		repo = e['repo']['name']
+		url = self.shorten_url(e['payload']['issue']['html_url'])
+		title = e['payload']['issue']['title'][:20]
+		return user + ' ' + action + ' the issue at ' + repo + ' ' + title + ' - ' + url
+	
+	def ForkEvent(self, e):
+		user = e['actor']['login']
+		repo = e['repo']['name']
+		forkee = e['payload']['forkee']['full_name']
+		return user + ' forked the repo ' + repo + ' to ' + forkee
+	
+	def IssueCommentEvent(self, e):
+		user = e['actor']['login']
+		name = e['payload']['issue']['title'][:20]
+		repo = e['repo']['name']
+		url = self.shorten_url(e['payload']['issue']['html_url'])
+		return user + ' commented on the issue ' + name + ' at ' + repo + ' - ' + url
+	
+	def WatchEvent(self, e):
+		user = e['actor']['login']
+		repo = e['repo']['name']
+		return user + ' starred ' + repo + '.'
+	
+	def CreateEvent(self, e):
+		user = e['actor']['login']
+		reft = e['payload']['ref_type']
+		repo = e['repo']['name']
+		url = self.shorten_url(e['payload']['repository']['html_url'])
+		return user + ' created a ' + reft + ' at ' + repo + ' - ' + url
+	
+	def PullRequestEvent(self, e):
+		user = e['actor']['login']
+		action = e['payload']['action']
+		repo = e['repo']['name']
+		url = self.shorten_url(e['payload']['pull_request']['html_url'])
+		return user + ' ' + action + ' a pull request to ' + repo + ' - ' + url
 
 if __name__ == '__main__':
 	while True:
