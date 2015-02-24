@@ -6,7 +6,7 @@ meta_data	= { "help": ["Adds or removes a user to the notify list", "&botcmdmoni
 
 def execute(parent, commands, irc, user, host, channel, params):
 	try:
-		data 		= open( '/'.join( os.path.dirname( os.path.realpath(__file__)).split("/")[:-1] ) + "/plugins/monitor_list" ).read()
+		data 		= open( parent.def_dir + "/commands/monitor_list" ).read()
 		monData 	= json.loads( data )
 	except ValueError:
 		monData 	= {}
@@ -31,15 +31,15 @@ def execute(parent, commands, irc, user, host, channel, params):
 				continue
 
 			monData[ user ].append( k )
-			command[4].monitor( k )
-		open('/'.join( os.path.dirname( os.path.realpath(__file__)).split("/")[:-1] ) + "/monlist", "w").write( str(monData).replace("'", '"') )
+			irc.send('MONITOR + ' + k )
+		open( parent.def_dir + "/commands/monitor_list", "w").write( str(monData).replace("'", '"') )
 		return ["Users added to your list: " + ', '.join( params[1:] ) + "."]
 
 	if params[0] == "remove":
 		for k in params[1:]:
 			monData[ user ].remove( k )
-			command[4].stop_monitor( k )
-		open('/'.join( os.path.dirname( os.path.realpath(__file__)).split("/")[:-1] ) + "/monlist", "w").write( str(monData).replace("'", '"') )
+			irc.send('MONITOR - ' + k )
+		open( parent.def_dir + "/commands/monitor_list", "w").write( str(monData).replace("'", '"') )
 		return ["Users removed from your list: " + ', '.join( params[1:] ) + "."]
 
 	return ["Please specify add, list or remove."]

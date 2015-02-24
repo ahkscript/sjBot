@@ -24,6 +24,19 @@ class sjBot(bot.ircBot):
 		print('[ Creating main data loop.')
 		self.irc.data_loop()
 	
+	def start_monitor(self):
+		with open(self.def_dir + '/commands/monitor_list', 'r') as mfile:
+			monitor_list = json.loads(mfile.read())
+		users = []
+		
+		for musers in monitor_list:
+			for us in monitor_list[musers]:
+				if us not in users:
+					users.append(us)
+		for us in users:
+			self.irc.send('MONITOR + ' + us)
+		return 0
+	
 	def load_plugins(self, plugin_folder):
 		plugins = {}
 		files = listdir(plugin_folder)
@@ -63,6 +76,37 @@ class sjBot(bot.ircBot):
 		self.plugins = self.load_plugins(self.def_dir + '/plugins/')
 		return 0
 	
+	def on730(self, host, nickname, ohost):
+		if nickname == self.botname:
+			return 0
+		
+		user = ohost.split('!')[0][1:]
+		uhost = ohost.split('!')[1]
+		
+		with open(self.def_dir + '/commands/monitor_list', 'r') as mfile:
+			monitor_list = json.loads(mfile.read())
+		
+		for notify in monitor_list:
+			for us in monitor_list[notify]:
+				if us == user:
+					self.irc.notify(notify,'*** ' + us + ' is online ***')
+		return 0
+	
+	def on731(self, host, nickname, ohost):
+		if nickname == self.botname:
+			return 0
+		
+		user = ohost[1:]
+		
+		with open(self.def_dir + '/commands/monitor_list', 'r') as mfile:
+			monitor_list = json.loads(mfile.read())
+		
+		for notify in monitor_list:
+			for us in monitor_list[notify]:
+				if us == user:
+					self.irc.notify(notify,'*** ' + us + ' is offline ***')
+		return 0
+	
 	def on433(self, host, ast, nickname, *params):
 		self.irc.send('NICK ' + nickname + '_')
 		self.botname = nickname + '_'
@@ -70,9 +114,11 @@ class sjBot(bot.ircBot):
 	
 	def on376(self, host, *params):
 		self.irc.send('PRIVMSG Nickserv :Identify sjBot ' + self.keys['sjbot_pass'], star=self.keys['sjbot_pass'])
+		return 0
 	
 	def on396(self, host, chost, *params):
-		self.irc.join(['#ahk', '#ahkscript', '#Sjc_Bot'])
+		self.irc.join(['#Sjc_Bot', '#ahk', '#ahkscript'])
+		self.start_monitor()
 		return 0
 	
 	def onITERATE(self):

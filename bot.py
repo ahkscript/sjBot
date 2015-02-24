@@ -18,6 +18,10 @@ class ircBot():
 		self.send('PRIVMSG ' + channel + ' :' + data)
 		return 0
 	
+	def notify(self, user, data):
+		self.send('NOTICE ' + user + ' :' + data)
+		return 0 
+	
 	def join(self, channellist):
 		if isinstance(channellist, str):
 			channellist = [channellist]
