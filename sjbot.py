@@ -63,6 +63,7 @@ class sjBot(bot.ircBot):
 		return response.read().decode('utf-8')
 	
 	def onALL(self, params):
+		self.plugins = self.load_plugins(self.def_dir + '/plugins/')
 		mtype = params[1]
 		
 		for pl in self.plugins:
@@ -70,11 +71,7 @@ class sjBot(bot.ircBot):
 				function = getattr(self.plugins[pl], 'on' + mtype)
 				function(self, params)
 		return 0
-	
-	def onITERATE(self):
-		self.commands = self.load_plugins(self.def_dir + '/commands/')
-		self.plugins = self.load_plugins(self.def_dir + '/plugins/')
-		return 0
+
 	
 	def on730(self, host, nickname, ohost):
 		if nickname == self.botname:
@@ -121,12 +118,8 @@ class sjBot(bot.ircBot):
 		self.start_monitor()
 		return 0
 	
-	def onITERATE(self):
-		self.commands = self.load_plugins(self.def_dir + '/commands/')
-		self.plugins = self.load_plugins(self.def_dir + '/plugins/')
-		return 0
-	
 	def onPRIVMSG(self, uhost, channel, *message):
+		self.commands = self.load_plugins(self.def_dir + '/commands/')
 		user, host = uhost.split('!')
 		user = user[1:]
 		message = [x for x in message]
@@ -136,15 +129,15 @@ class sjBot(bot.ircBot):
 			channel = user
 		
 		if message[0].startswith(self.botcmd):
-		
 			command = message[0][len(self.botcmd):]
 			params = message[1:]
 			
 			cmd = self.is_command(command)
 			
 			if cmd == 0:
-				command = 'ahk'
+				cmd = 'ahk'
 				params = [message[0][len(self.botcmd):]] + message[1:]
+				print( params )
 			response = self.commands[cmd].execute(self, self.commands, self.irc, user, host, channel, params)
 			for re in response:
 				self.irc.privmsg(channel, re)

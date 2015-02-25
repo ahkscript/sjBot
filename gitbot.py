@@ -84,16 +84,16 @@ class AutoGitBot(bot.ircBot):
 		size = e['payload']['size']
 		repo = e['repo']['name']
 		url = self.shorten_url('https://github.com/' + e['repo']['name'] + '/commits/master')
-		message = e['payload']['commits'][0]['message'][:20]
-		return user + ' pushed ' + str(size) + ' commit[s] to ' + repo + ' ' + message + ' - ' + url
+		message = e['payload']['commits'][0]['message'][:25]
+		return user + ' pushed ' + str(size) + ' commit[s] to ' + repo + ' "' + message + '..." - ' + url
 	
 	def IssueEvent(self, e):
 		user = e['actor']['login']
 		action = e['payload']['action']
 		repo = e['repo']['name']
 		url = self.shorten_url(e['payload']['issue']['html_url'])
-		title = e['payload']['issue']['title'][:20]
-		return user + ' ' + action + ' the issue at ' + repo + ' ' + title + ' - ' + url
+		title = e['payload']['issue']['title'][:25]
+		return user + ' ' + action + ' the issue at ' + repo + ' "' + title + '..." - ' + url
 	
 	def ForkEvent(self, e):
 		user = e['actor']['login']
@@ -103,10 +103,10 @@ class AutoGitBot(bot.ircBot):
 	
 	def IssueCommentEvent(self, e):
 		user = e['actor']['login']
-		name = e['payload']['issue']['title'][:20]
+		name = e['payload']['issue']['title'][:25]
 		repo = e['repo']['name']
 		url = self.shorten_url(e['payload']['issue']['html_url'])
-		return user + ' commented on the issue ' + name + ' at ' + repo + ' - ' + url
+		return user + ' commented on the issue "' + name + '" at ' + repo + ' - ' + url
 	
 	def WatchEvent(self, e):
 		user = e['actor']['login']
