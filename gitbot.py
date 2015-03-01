@@ -24,7 +24,7 @@ class AutoGitBot(bot.ircBot):
 		self.irc.send('NICK ' + nickname + '_')
 		self.nickname = nickname + '_'
 		return 0
-	
+
 	def on376(self, host, *params):
 		self.irc.send('PRIVMSG NickServ :Identify AutoGitBot ' + self.keys['sjbot_pass'], star=self.keys['sjbot_pass'])
 		return 0
@@ -87,7 +87,7 @@ class AutoGitBot(bot.ircBot):
 		message = e['payload']['commits'][0]['message'][:25]
 		return user + ' pushed ' + str(size) + ' commit[s] to ' + repo + ' "' + message + '..." - ' + url
 	
-	def IssueEvent(self, e):
+	def IssuesEvent(self, e):
 		user = e['actor']['login']
 		action = e['payload']['action']
 		repo = e['repo']['name']
