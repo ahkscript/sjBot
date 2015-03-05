@@ -7,7 +7,7 @@ def execute(parent, commands, irc, user, host, channel, params ):
 	if len( params ) > 0:
 		for z in commands:
 			if any( params[0] == cmd for cmd in commands[z].meta_data["aliases"]):
-				return [commands[z].meta_data["help"]]
+				return commands[z].meta_data["help"]
 			else:
 				continue
 	
