@@ -54,12 +54,7 @@ class sjBot(bot.ircBot):
 		return response
 	
 	def download_url(self, url):
-		try:
-			response 	= urllib.request.urlopen(url) 
-		except UnicodeEncodeError:
-			return 0
-		except:
-			return 0
+		response 	= urllib.request.urlopen(url) 
 		return response.read().decode('utf-8')
 	
 	def onALL(self, params):
@@ -114,7 +109,7 @@ class sjBot(bot.ircBot):
 		return 0
 	
 	def on396(self, host, chost, *params):
-		self.irc.join(['#Sjc_Bot', '#ahk', '#ahkscript'])
+		self.irc.join(['#Sjc_Bot'])
 		self.start_monitor()
 		return 0
 	
@@ -139,8 +134,9 @@ class sjBot(bot.ircBot):
 				params = [message[0][len(self.botcmd):]] + message[1:]
 				print( params )
 			response = self.commands[cmd].execute(self, self.commands, self.irc, user, host, channel, params)
+			print( response )
 			for re in response:
-				self.irc.privmsg(channel, re)
+				self.irc.privmsg(channel, re.replace('&botcmd', self.botcmd))
 		return 0
 	
 	def is_command(self, command):
