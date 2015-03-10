@@ -6,25 +6,44 @@ import imp
 import urllib.request
 import time
 
+
+tc = {'header':'\033[95m','blue':'\033[94m','green':'\033[92m','warning':'\033[93m',
+	'fail':'\033[91m','end':'\033[0m','bold':'\033[1m','underline':'\033[4m'}
+
 class sjBot(bot.ircBot):
 	botcmd = '`'
 	botname = 'sjBot'
+	channel_list = ['#Sjc_Bot','#ahkscript','#ahk','#donationcoder']
 	def __init__(self, network, port, keyfile='keys'):
 		self.def_dir = os.path.dirname(os.path.realpath(__file__))
-		print('[ Loading keyfile')
+		self.prout('Starting IRC bot.','green')
 		with open(self.def_dir + '/' + keyfile, 'r') as my_file:
 			self.keys = json.loads( my_file.read() )
-		print('[ Loading commands and plugins.')
+		self.prout(['Loading plugins.','Loading commands.'])
 		self.commands = self.load_plugins(self.def_dir + '/commands/')
 		self.plugins = self.load_plugins(self.def_dir + '/plugins/')
-		print('[ Connecting to irc.\n\tNetwork: ' + network + '\n\tPort: ' + str(port))
+		self.prout(['Connecting to irc.','Network: ' + network,'Port: ' + str(port)])
 		self.irc = bot.ircBot(network, port, self)
-		print('[ Identifying with username ' + self.botname + '.')
+		self.prout('Identifying with username ' + self.botname + '.')
 		self.irc.ident(self.botname, self.botname, self.botname, 'Uptone Software')
-		print('[ Creating main data loop.')
+		self.prout('Creating main data loop.')
 		self.irc.data_loop()
 	
+	def prout(self, data, tcolor=''):
+		t = time.localtime(time.time())
+		if tcolor == '':
+			color = ''
+		else:
+			color = tc[tcolor]
+		if isinstance(data, str):
+			print('{0}[{1:0>2}:{2:0>2}:{3:0>2}]{4}{5} {6}{4}'.format(tc['header'],t[3],t[4],t[5],tc['end'],color,data))
+		else:
+			for line in data:
+				print('{0}[{1:0>2}:{2:0>2}:{3:0>2}]{4}{5} {6}{4}'.format(tc['header'],t[3],t[4],t[5],tc['end'],color,line))
+		return 0
+	
 	def start_monitor(self):
+		self.prout('Starting user monitor.')
 		with open(self.def_dir + '/commands/monitor_list', 'r') as mfile:
 			monitor_list = json.loads(mfile.read())
 		users = []
@@ -102,14 +121,16 @@ class sjBot(bot.ircBot):
 	def on433(self, host, ast, nickname, *params):
 		self.irc.send('NICK ' + nickname + '_')
 		self.botname = nickname + '_'
+		self.prout('Nickname: {} already in use. Trying with {}'.format(nickname, nickname + '_'))
 		return 0
 	
 	def on376(self, host, *params):
-		self.irc.send('PRIVMSG Nickserv :Identify sjBot ' + self.keys['sjbot_pass'], star=self.keys['sjbot_pass'])
+		self.irc.send('PRIVMSG Nickserv :Identify sjBot ' + self.keys['sjbot_pass'])
 		return 0
 	
 	def on396(self, host, chost, *params):
-		self.irc.join(['#Sjc_Bot'])
+		self.irc.join(self.channel_list)
+		self.prout('Joining channels: {}'.format(', '.join(self.channel_list)))
 		self.start_monitor()
 		return 0
 	
@@ -123,6 +144,8 @@ class sjBot(bot.ircBot):
 		if channel == self.botname:
 			channel = user
 		
+		self.prout('{3}[{0}{4} {5}{1}{4}{3}]{4} {2}'.format(channel if channel != user else 'PM from', user, ' '.join(message),tc['bold'],tc['end'],tc['warning']))
+		
 		if message[0].startswith(self.botcmd):
 			command = message[0][len(self.botcmd):]
 			params = message[1:]
@@ -134,9 +157,12 @@ class sjBot(bot.ircBot):
 				params = [message[0][len(self.botcmd):]] + message[1:]
 				print( params )
 			response = self.commands[cmd].execute(self, self.commands, self.irc, user, host, channel, params)
-			print( response )
 			for re in response:
 				self.irc.privmsg(channel, re.replace('&botcmd', self.botcmd))
+		return 0
+	
+	def sys_message(self, message):
+		self.prout(message)
 		return 0
 	
 	def is_command(self, command):
@@ -146,6 +172,4 @@ class sjBot(bot.ircBot):
 		return 0
 
 if __name__ == '__main__':
-	while True:
-		sjbot = sjBot('irc.freenode.net', 6667)
-		time.sleep(10)
+	sjbot = sjBot('irc.freenode.net', 6667)
