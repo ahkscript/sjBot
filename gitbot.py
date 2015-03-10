@@ -128,6 +128,4 @@ class AutoGitBot(bot.ircBot):
 		return user + ' ' + action + ' a pull request to ' + repo + ' - ' + url
 
 if __name__ == '__main__':
-	while True:
-		gitbot = AutoGitBot('irc.freenode.net', 6667)
-		time.sleep(10)
+	gitbot = AutoGitBot('irc.freenode.net', 6667)
