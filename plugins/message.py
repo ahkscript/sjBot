@@ -1,8 +1,7 @@
 import json
 
-def onJOIN(this, full_host, join, channel):
-	user = full_host.split('!')[0][1:]
-	
+
+def check_message(this, user):
 	try:
 		with open(this.def_dir + '/commands/messages', 'r') as mfile:
 			message_data = json.loads(mfile.read())
@@ -26,3 +25,11 @@ def onJOIN(this, full_host, join, channel):
 	with open(this.def_dir + '/commands/messages', 'w') as mfile:
 		mfile.write(json.dumps(message_data))
 	return 0
+
+def onPRIVMSG(this, full_host, privmsg, channel, *message):
+	user = full_host.split('!')[0][1:]
+	check_message(this, user)
+
+def onJOIN(this, full_host, join, channel):
+	user = full_host.split('!')[0][1:]
+	check_message(this, user)
