@@ -13,7 +13,7 @@ tc = {'header':'\033[95m','blue':'\033[94m','green':'\033[92m','warning':'\033[9
 class sjBot(bot.ircBot):
 	botcmd = '`'
 	botname = 'sjBot'
-	channel_list = ['#Sjc_Bot','#ahkscript','#ahk','#donationcoder']
+	channel_list = ['#Sjc_Bot']
 	def __init__(self, network, port, keyfile='keys'):
 		self.def_dir = os.path.dirname(os.path.realpath(__file__))
 		self.prout('Starting IRC bot.','green')

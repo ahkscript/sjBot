@@ -26,7 +26,7 @@ class AutoGitBot(bot.ircBot):
 		return 0
 
 	def on376(self, host, *params):
-		self.irc.send('PRIVMSG NickServ :Identify AutoGitBot ' + self.keys['sjbot_pass'], star=self.keys['sjbot_pass'])
+		self.irc.send('PRIVMSG NickServ :Identify AutoGitBot ' + self.keys['sjbot_pass'])
 		return 0
 	
 	def on396(self, host, chost, *params):
