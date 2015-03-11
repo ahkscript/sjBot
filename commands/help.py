@@ -11,4 +11,4 @@ def execute(parent, commands, irc, user, host, channel, params ):
 			else:
 				continue
 	
-	return ["Please use " + parent.botcmd + "help [command name], for more info.", "Here is a list of commands. " + ", ".join(sorted(commands)) + "."]
+	return ["Please use &botcmdhelp [command name], for more info.", "Here is a list of commands. " + ", ".join(sorted(commands)) + "."]
