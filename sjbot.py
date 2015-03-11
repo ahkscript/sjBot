@@ -5,15 +5,15 @@ import os
 import imp
 import urllib.request
 import time
-
+import sys
 
 tc = {'header':'\033[95m','blue':'\033[94m','green':'\033[92m','warning':'\033[93m',
 	'fail':'\033[91m','end':'\033[0m','bold':'\033[1m','underline':'\033[4m'}
 
 class sjBot(bot.ircBot):
-	botcmd = '`'
+	botcmd = {'default': '`','#donationcoder': '.'}
 	botname = 'sjBot'
-	channel_list = ['#Sjc_Bot']
+	channel_list = ['#Sjc_Bot','#ahkscript','#ahk','#donationcoder']
 	def __init__(self, network, port, keyfile='keys'):
 		self.def_dir = os.path.dirname(os.path.realpath(__file__))
 		self.prout('Starting IRC bot.','green')
@@ -83,7 +83,7 @@ class sjBot(bot.ircBot):
 		for pl in self.plugins:
 			if hasattr(self.plugins[pl], 'on' + mtype):
 				function = getattr(self.plugins[pl], 'on' + mtype)
-				function(self, params)
+				function(self, *params)
 		return 0
 
 	
@@ -145,20 +145,24 @@ class sjBot(bot.ircBot):
 			channel = user
 		
 		self.prout('{3}[{0}{4} {5}{1}{4}{3}]{4} {2}'.format(channel if channel != user else 'PM from', user, ' '.join(message),tc['bold'],tc['end'],tc['warning']))
+		if channel in self.botcmd:
+			botcmd = self.botcmd[channel]
+		else:
+			botcmd = self.botcmd['default']
 		
-		if message[0].startswith(self.botcmd):
-			command = message[0][len(self.botcmd):]
+		if message[0].startswith(botcmd):
+			command = message[0][len(botcmd):]
 			params = message[1:]
 			
-			cmd = self.is_command(command)
+			cmd = self.is_command(command.lower())
 			
 			if cmd == 0:
 				cmd = 'ahk'
-				params = [message[0][len(self.botcmd):]] + message[1:]
+				params = [message[0][len(botcmd):]] + message[1:]
 				print( params )
 			response = self.commands[cmd].execute(self, self.commands, self.irc, user, host, channel, params)
 			for re in response:
-				self.irc.privmsg(channel, re.replace('&botcmd', self.botcmd))
+				self.irc.privmsg(channel, re.replace('&botcmd', botcmd))
 		return 0
 	
 	def sys_message(self, message):
