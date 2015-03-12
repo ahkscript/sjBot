@@ -3,8 +3,8 @@ import urllib.request
 import json
 
 
-def onPRIVMSG(this, message ):
-	reg = re.search("watch\?v=(.*?)(\&|\s+|$)", ' '.join( message[3:] ) )
+def onPRIVMSG(this, *message):
+	reg = re.search("watch\?v=(.*?)(\&|\s+|$|#)", ' '.join( message[3:] ) )
 	try:	
 		url = reg.group(1)
 	except AttributeError:
