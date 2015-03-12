@@ -33,13 +33,12 @@ class ircBot():
 			self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 				
 			try:
-				self.socket.connect((self.network, self.port))
+				self.socket.connect((network, port))
 			except TimeoutError:
 				pprint('Attempt failed.', prefix=' ', timestamp=1)
 				time.sleep(10)
 			else:
 				pprint('Attempt succesful.', prefix=' ', timestamp=1)
-				self.ident(self.nickname, self.user, self.host, self.realname)
 				return 1
 		return 0
 	
@@ -157,6 +156,7 @@ class ircBot():
 			connection = self.make_connection(self.network, self.port)
 			if connection == 0:
 				sys.exit(0)
+			self.ident(self.nickname, self.user, self.host, self.realname)
 		return 0
 	
 	def handle_data(self, data):
