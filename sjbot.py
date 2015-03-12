@@ -6,9 +6,7 @@ import imp
 import urllib.request
 import time
 import sys
-
-tc = {'header':'\033[95m','blue':'\033[94m','green':'\033[92m','warning':'\033[93m',
-	'fail':'\033[91m','end':'\033[0m','bold':'\033[1m','underline':'\033[4m'}
+from pprint import pprint
 
 class sjBot(bot.ircBot):
 	botcmd = {'default': '`','#donationcoder': '.'}
@@ -16,34 +14,33 @@ class sjBot(bot.ircBot):
 	channel_list = ['#Sjc_Bot','#ahkscript','#ahk','#donationcoder']
 	def __init__(self, network, port, keyfile='keys'):
 		self.def_dir = os.path.dirname(os.path.realpath(__file__))
-		self.prout('Starting IRC bot.','green')
+		pprint('{} started. Thanks for using my software! :D'.format(self.botname), prefix=' ', timestamp=1)
 		with open(self.def_dir + '/' + keyfile, 'r') as my_file:
 			self.keys = json.loads( my_file.read() )
-		self.prout(['Loading plugins.','Loading commands.'])
+		pprint('Loading commands and plugins.', prefix=' ', timestamp=1)
 		self.commands = self.load_plugins(self.def_dir + '/commands/')
 		self.plugins = self.load_plugins(self.def_dir + '/plugins/')
-		self.prout(['Connecting to irc.','Network: ' + network,'Port: ' + str(port)])
+		pprint('Connecting to IRC.', prefix=' ', timestamp=1)
 		self.irc = bot.ircBot(network, port, self)
-		self.prout('Identifying with username ' + self.botname + '.')
 		self.irc.ident(self.botname, self.botname, self.botname, 'Uptone Software')
-		self.prout('Creating main data loop.')
-		self.irc.data_loop()
+		
+		try:
+			self.irc.data_loop()
+		except KeyboardInterrupt:
+			pprint('Recieved the command to shutdown.', 'red', prefix=' ', timestamp=1)
+			self.shutdown()
+		except:
+			pprint('Something went wrong.', 'red', prefix=' ', timestamp=1)
+			raise
 	
-	def prout(self, data, tcolor=''):
-		t = time.localtime(time.time())
-		if tcolor == '':
-			color = ''
-		else:
-			color = tc[tcolor]
-		if isinstance(data, str):
-			print('{0}[{1:0>2}:{2:0>2}:{3:0>2}]{4}{5} {6}{4}'.format(tc['header'],t[3],t[4],t[5],tc['end'],color,data))
-		else:
-			for line in data:
-				print('{0}[{1:0>2}:{2:0>2}:{3:0>2}]{4}{5} {6}{4}'.format(tc['header'],t[3],t[4],t[5],tc['end'],color,line))
+	def shutdown(self):
+		self.irc.send('QUIT :Ive been told to quit. Bye :D')
+		self.irc.socket.shutdown(1)
+		self.irc.socket.close()
 		return 0
 	
 	def start_monitor(self):
-		self.prout('Starting user monitor.')
+		pprint('Starting user monitor.', 'yellow', prefix=' ', timestamp=1)
 		with open(self.def_dir + '/commands/monitor_list', 'r') as mfile:
 			monitor_list = json.loads(mfile.read())
 		users = []
@@ -121,16 +118,17 @@ class sjBot(bot.ircBot):
 	def on433(self, host, ast, nickname, *params):
 		self.irc.send('NICK ' + nickname + '_')
 		self.botname = nickname + '_'
-		self.prout('Nickname: {} already in use. Trying with {}'.format(nickname, nickname + '_'))
+		pprint('{} already taken. Trying with {}.'.format(nickname, self.botname), 'yellow', prefix=' ', timestamp=1)
 		return 0
 	
 	def on376(self, host, *params):
 		self.irc.send('PRIVMSG Nickserv :Identify sjBot ' + self.keys['sjbot_pass'])
+		pprint('Identifying', 'yellow', prefix=' ', timestamp=1)
 		return 0
 	
 	def on396(self, host, chost, *params):
 		self.irc.join(self.channel_list)
-		self.prout('Joining channels: {}'.format(', '.join(self.channel_list)))
+		pprint('Joining channels: {}'.format(', '.join(self.channel_list)), 'yellow', prefix=' ', timestamp=1)
 		self.start_monitor()
 		return 0
 	
@@ -141,14 +139,13 @@ class sjBot(bot.ircBot):
 		message = [x for x in message]
 		message = [message[0][1:]] + message[1:]
 		
-		if channel == self.botname:
-			channel = user
-		
-		self.prout('{3}[{0}{4} {5}{1}{4}{3}]{4} {2}'.format(channel if channel != user else 'PM from', user, ' '.join(message),tc['bold'],tc['end'],tc['warning']))
 		if channel in self.botcmd:
 			botcmd = self.botcmd[channel]
 		else:
 			botcmd = self.botcmd['default']
+		
+		if channel == self.botname:
+			channel = user
 		
 		if message[0].startswith(botcmd):
 			command = message[0][len(botcmd):]
@@ -159,14 +156,9 @@ class sjBot(bot.ircBot):
 			if cmd == 0:
 				cmd = 'ahk'
 				params = [message[0][len(botcmd):]] + message[1:]
-				print( params )
 			response = self.commands[cmd].execute(self, self.commands, self.irc, user, host, channel, params)
 			for re in response:
 				self.irc.privmsg(channel, re.replace('&botcmd', botcmd))
-		return 0
-	
-	def sys_message(self, message):
-		self.prout(message)
 		return 0
 	
 	def is_command(self, command):

@@ -1,6 +1,8 @@
 import socket
 import threading
 import time
+import sys
+from pprint import pprint
 
 class ircBot():
 	nickname = ''
@@ -20,8 +22,26 @@ class ircBot():
 		self.attempt_rejoin = attempt_rejoin
 		self.port = port
 		self.parent = parent
-		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		self.socket.connect((network,port))
+		connection = self.make_connection(network, port)
+		if connection == 0:
+			pprint('Failed to connect', prefix=' ', timestamp=1)
+			sys.exit(0)
+	
+	def make_connection(self, network, port):
+		for i in range(1,10):
+			pprint('Attempt {}'.format(str(i)), prefix=' ', timestamp=1)
+			self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+				
+			try:
+				self.socket.connect((self.network, self.port))
+			except TimeoutError:
+				pprint('Attempt failed.', prefix=' ', timestamp=1)
+				time.sleep(10)
+			else:
+				pprint('Attempt succesful.', prefix=' ', timestamp=1)
+				self.ident(self.nickname, self.user, self.host, self.realname)
+				return 1
+		return 0
 	
 	def send(self, data, prefix='', suffix='\r\n'):
 		'''send
@@ -131,22 +151,12 @@ class ircBot():
 		Called when there is no data recieved from IRC anymore.
 		If attempt_rejoin has been set to 1 it will try 10 times to reconnect.
 		'''
-		self.message_parent('IRC connection lost.')
+		pprint('IRC connection lost.', prefix=' ', timestamp=1)
 		if self.attempt_rejoin == 1:
-			self.message_parent('Retrying connection.')
-			for i in range(1,10):
-				self.message_parent('Attempt {}'.format(str(i)))
-				self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-				
-				try:
-					self.socket.connect((self.network, self.port))
-				except TimeoutError:
-					self.message_parent('Attempt failed.')
-					time.sleep(10)
-				else:
-					self.message_parent('Attempt succesful.')
-					self.ident(self.nickname, self.user, self.host, self.realname)
-					break
+			pprint('Retrying connection.', prefix=' ', timestamp=1)
+			connection = self.make_connection(self.network, self.port)
+			if connection == 0:
+				sys.exit(0)
 		return 0
 	
 	def handle_data(self, data):
@@ -162,6 +172,7 @@ class ircBot():
 		for line in data.split('\r\n'):
 			if line == '':
 				continue
+			pprint(line, prefix=' ', timestamp=1)
 			split = line.split(' ')
 			
 			if split[0] == 'PING':
