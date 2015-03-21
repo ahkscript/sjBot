@@ -1,4 +1,8 @@
 {
-	"key1": "password",
-	"key2": "password2"
+	"google": "google api key here",
+	"github": "github api key here",
+	"bitly": "bitly api key here",
+	"gitbot_pass": "github irc password here",
+	"sjbot_pass": "sjbot irc password here",
+	"wolfram": "wolfram api key here"
 }
