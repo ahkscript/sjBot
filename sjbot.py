@@ -10,6 +10,9 @@ from pprint import pprint
 
 class sjBot(bot.ircBot):
 	botcmd = {'default': '`','#donationcoder': '.'}
+	default_cmd = {'default': 'ahk', '#donationcoder': 'google'}
+	ignore = ['.','n','r','`']
+	ownerlist = ['Sjc1000@gateway/shell/elitebnc']
 	botname = 'sjBot'
 	channel_list = ['#Sjc_Bot','#ahkscript','#ahk','#donationcoder']
 	def __init__(self, network, port, keyfile='keys'):
@@ -144,19 +147,33 @@ class sjBot(bot.ircBot):
 		else:
 			botcmd = self.botcmd['default']
 		
-		if channel == self.botname:
-			channel = user
-		
 		if message[0].startswith(botcmd):
 			command = message[0][len(botcmd):]
+			
+			if any(command.startswith(c) for c in self.ignore):
+				return 0
+
 			params = message[1:]
 			
 			cmd = self.is_command(command.lower())
 			
 			if cmd == 0:
-				cmd = 'ahk'
+				if channel in self.default_cmd:
+					cmd = self.default_cmd[channel]
+				else:
+					cmd = self.default_cmd['default']
 				params = [message[0][len(botcmd):]] + message[1:]
+
+			if channel == self.botname:
+				channel = user
+
+			if self.commands[cmd].meta_data['owner'] == 1 and not any(us in uhost for us in self.ownerlist):
+				self.irc.privmsg(channel, 'You do not have permission to use that!')
+				return 0
+			
 			response = self.commands[cmd].execute(self, self.commands, self.irc, user, host, channel, params)
+			if response == 0:
+				return 0
 			for re in response:
 				self.irc.privmsg(channel, re.replace('&botcmd', botcmd))
 		return 0
