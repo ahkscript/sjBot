@@ -4,6 +4,26 @@ import time
 import sys
 from pprint import pprint
 
+'''
+	sjBot is a Python IRC Bot made by Sjc1000 ( Steven J. Core )
+			Copyright © 2015, Steven J. Core
+	
+	This file is a part of sjBot.
+	
+	sjBot is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+'''
+
 class ircBot():
 	nickname = ''
 	user = ''
@@ -33,12 +53,13 @@ class ircBot():
 			self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 				
 			try:
-				self.socket.connect((network, port))
+				self.socket.connect((self.network, self.port))
 			except TimeoutError:
 				pprint('Attempt failed.', prefix=' ', timestamp=1)
 				time.sleep(10)
 			else:
 				pprint('Attempt succesful.', prefix=' ', timestamp=1)
+				self.ident(self.nickname, self.user, self.host, self.realname)
 				return 1
 		return 0
 	
@@ -118,17 +139,6 @@ class ircBot():
 			time.sleep(timeout)
 		return -1
 	
-	def message_parent(self, data):
-		'''message_parent
-		Calls the parent's sys_message method. Which can then do anything with the message.
-			params:
-			- data: The data to send to the parent.
-		'''
-		if hasattr(self.parent, 'sys_message'):
-			function = getattr(self.parent, 'sys_message')
-			function(data)
-		return 0
-	
 	def data_loop(self):
 		'''data_loop
 		The data loop which handles incoming data from IRC. It will then pass it to handle_data when a complete ammount of data has been retrieved.
@@ -156,7 +166,6 @@ class ircBot():
 			connection = self.make_connection(self.network, self.port)
 			if connection == 0:
 				sys.exit(0)
-			self.ident(self.nickname, self.user, self.host, self.realname)
 		return 0
 	
 	def handle_data(self, data):
