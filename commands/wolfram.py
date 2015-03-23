@@ -3,7 +3,7 @@ import html.parser
 import re
 meta_data 	= { "help": ["Searches google for an ahk related query.","Usage: &botcmdahk <query>"], "aliases": ["wolfram", "wa"], "owner": 0 }
 
-def execute(parent, commands, irc, user, host, channel, params):
+def execute(parent, commands, user, host, channel, params):
 	if len(params ) == 0:
 		return ["This command needs more params"]
 

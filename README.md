@@ -1,6 +1,5 @@
 #sjBot
 
-
 	sjBot is a Python IRC Bot made by Sjc1000 ( Steven J. Core )
 			Copyright © 2015, Steven J. Core
 	

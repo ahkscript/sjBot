@@ -1,9 +1,9 @@
 import urllib.request
 import json
-meta_data = {"help": ["This command will show bitcoin prices.","Useage: &botcmdbitcoin"], "aliases": ["btc", "bit", "bitcoin"], "owner": 0 }
+meta_data = {"help": ["This command will show bitcoin prices.","Usage: &botcmdbitcoin"], "aliases": ["btc", "bit", "bitcoin"], "owner": 0 }
 
 
-def execute(parent, commands, irc, user, host, channel, params ):
+def execute(parent, commands, user, host, channel, params ):
 	if len( params ) > 0:
 		btype 	= params[0]
 	else:

@@ -1,4 +1,4 @@
-import bot
+from bot import bot
 import json
 from os import listdir
 import os
@@ -27,38 +27,38 @@ from pprint import pprint
 '''
 
 
-class sjBot(bot.ircBot):
+class sjBot(bot):
 	botcmd = {'default': '`','#donationcoder': '.'}
 	default_cmd = {'default': 'ahk', '#donationcoder': 'google'}
 	ignore = ['.','n','r','`']
 	ownerlist = ['Sjc1000@gateway/shell/elitebnc']
-	botname = 'sjBot'
 	channel_list = ['#Sjc_Bot','#ahkscript','#ahk','#donationcoder']
 	def __init__(self, network, port, keyfile='keys'):
 		self.def_dir = os.path.dirname(os.path.realpath(__file__))
-		pprint('{} started. Thanks for using my software! :D'.format(self.botname), prefix=' ', timestamp=1)
 		with open(self.def_dir + '/' + keyfile, 'r') as my_file:
 			self.keys = json.loads( my_file.read() )
 		pprint('Loading commands and plugins.', prefix=' ', timestamp=1)
 		self.commands = self.load_plugins(self.def_dir + '/commands/')
 		self.plugins = self.load_plugins(self.def_dir + '/plugins/')
 		pprint('Connecting to IRC.', prefix=' ', timestamp=1)
-		self.irc = bot.ircBot(network, port, self)
-		self.irc.ident(self.botname, self.botname, self.botname, 'Uptone Software')
+		bot.__init__(self, network, port)
+		self.ident()
 		
 		try:
-			self.irc.data_loop()
+			self.main_loop()
 		except KeyboardInterrupt:
 			pprint('Recieved the command to shutdown.', 'red', prefix=' ', timestamp=1)
-			self.shutdown()
+			pass
 		except:
 			pprint('Something went wrong.', 'red', prefix=' ', timestamp=1)
 			raise
 	
-	def shutdown(self):
-		self.irc.send('QUIT :Ive been told to quit. Bye :D')
-		self.irc.socket.shutdown(1)
-		self.irc.socket.close()
+	def startup(self):
+		self.nickname = 'sjBot'
+		self.host = 'uptonesoftware'
+		self.user = 'Sjc1000'
+		self.realname = 'Uptone Software/sjBot'
+		self.ident()
 		return 0
 	
 	def start_monitor(self):
@@ -72,7 +72,7 @@ class sjBot(bot.ircBot):
 				if us not in users:
 					users.append(us)
 		for us in users:
-			self.irc.send('MONITOR + ' + us)
+			self.send('MONITOR + ' + us)
 		return 0
 	
 	def load_plugins(self, plugin_folder):
@@ -92,10 +92,13 @@ class sjBot(bot.ircBot):
 		return response
 	
 	def download_url(self, url):
-		response 	= urllib.request.urlopen(url) 
+		try:
+			response = urllib.request.urlopen(url)
+		except:
+			return 0 
 		return response.read().decode('utf-8')
 	
-	def onALL(self, params):
+	def onALL(self, *params):
 		self.plugins = self.load_plugins(self.def_dir + '/plugins/')
 		mtype = params[1]
 		
@@ -107,7 +110,7 @@ class sjBot(bot.ircBot):
 
 	
 	def on730(self, host, nickname, ohost):
-		if nickname == self.botname:
+		if nickname == self.nickname:
 			return 0
 		
 		user = ohost.split('!')[0][1:]
@@ -119,11 +122,11 @@ class sjBot(bot.ircBot):
 		for notify in monitor_list:
 			for us in monitor_list[notify]:
 				if us == user:
-					self.irc.notify(notify,'*** ' + us + ' is online ***')
+					self.notify(notify,'*** ' + us + ' is online ***')
 		return 0
 	
 	def on731(self, host, nickname, ohost):
-		if nickname == self.botname:
+		if nickname == self.nickname:
 			return 0
 		
 		user = ohost[1:]
@@ -134,22 +137,23 @@ class sjBot(bot.ircBot):
 		for notify in monitor_list:
 			for us in monitor_list[notify]:
 				if us == user:
-					self.irc.notify(notify,'*** ' + us + ' is offline ***')
+					self.notify(notify,'*** ' + us + ' is offline ***')
 		return 0
 	
 	def on433(self, host, ast, nickname, *params):
-		self.irc.send('NICK ' + nickname + '_')
-		self.botname = nickname + '_'
-		pprint('{} already taken. Trying with {}.'.format(nickname, self.botname), 'yellow', prefix=' ', timestamp=1)
+		self.send('NICK ' + nickname + '_')
+		self.nickname = nickname + '_'
+		pprint('{} already taken. Trying with {}.'.format(nickname, self.nickname), 'yellow', prefix=' ', timestamp=1)
 		return 0
 	
 	def on376(self, host, *params):
-		self.irc.send('PRIVMSG Nickserv :Identify sjBot ' + self.keys['sjbot_pass'])
+		self.send('PRIVMSG Nickserv :Identify sjBot ' + self.keys['sjbot_pass'])
 		pprint('Identifying', 'yellow', prefix=' ', timestamp=1)
 		return 0
 	
 	def on396(self, host, chost, *params):
-		self.irc.join(self.channel_list)
+		for channel in self.channel_list:
+			self.join(channel)
 		pprint('Joining channels: {}'.format(', '.join(self.channel_list)), 'yellow', prefix=' ', timestamp=1)
 		self.start_monitor()
 		return 0
@@ -183,18 +187,18 @@ class sjBot(bot.ircBot):
 					cmd = self.default_cmd['default']
 				params = [message[0][len(botcmd):]] + message[1:]
 
-			if channel == self.botname:
+			if channel == self.nickname:
 				channel = user
 
 			if self.commands[cmd].meta_data['owner'] == 1 and not any(us in uhost for us in self.ownerlist):
-				self.irc.privmsg(channel, 'You do not have permission to use that!')
+				self.privmsg(channel, 'You do not have permission to use that!')
 				return 0
 			
-			response = self.commands[cmd].execute(self, self.commands, self.irc, user, host, channel, params)
+			response = self.commands[cmd].execute(self, self.commands, user, host, channel, params)
 			if response == 0:
 				return 0
 			for re in response:
-				self.irc.privmsg(channel, re.replace('&botcmd', botcmd))
+				self.privmsg(channel, re.replace('&botcmd', botcmd))
 		return 0
 	
 	def is_command(self, command):

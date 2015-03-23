@@ -1,4 +1,4 @@
-import bot
+from bot import bot
 import json
 import urllib.request
 import os
@@ -6,37 +6,51 @@ import re
 import time
 
 
-class AutoGitBot(bot.ircBot):
-	nickname = 'AutoGitBot'
+class AutoGitBot(bot):
 	repo = 'https://api.github.com/users/ahkscript/events?access_token='
 	def __init__(self, network, port, keyfile='keys'):
 		self.def_dir = os.path.dirname(os.path.realpath(__file__))
 		with open(self.def_dir + '/' + keyfile, 'r') as my_file:
 			self.keys = json.loads( my_file.read() )
 		self.def_dir = os.path.dirname(os.path.realpath(__file__))
-		self.irc = bot.ircBot(network, port, self)
-		self.irc.ident(self.nickname, self.nickname, self.nickname, 'Uptone Software')
+		bot.__init__(self, network, port)
+		print( self.repo + self.keys['github'] )
+		print( self.download_url(self.repo + self.keys['github']) )
 		with open(self.def_dir + '/old_events', 'w') as mfile:
 			mfile.write( self.download_url(self.repo + self.keys['github']) )
-		self.irc.data_loop()
+		self.main_loop()
+	
+	def startup(self):
+		self.nickname = 'AutoGitBot'
+		self.user = 'Sjc1000'
+		self.host = 'uptonesoftware'
+		self.realname = 'Uptone Software/AutoGitBot'
+		self.ident()
+		return 0
 
 	def on433(self, host, ast, nickname, *params):
-		self.irc.send('NICK ' + nickname + '_')
+		self.send('NICK ' + nickname + '_')
 		self.nickname = nickname + '_'
 		return 0
 
 	def on376(self, host, *params):
-		self.irc.send('PRIVMSG NickServ :Identify AutoGitBot ' + self.keys['sjbot_pass'])
+		self.send('PRIVMSG NickServ :Identify AutoGitBot ' + self.keys['sjbot_pass'])
 		return 0
 	
 	def on396(self, host, chost, *params):
-		self.irc.join('#ahkscript')
+		self.join('#ahkscript')
 		
 		with open(self.def_dir + '/old_events', 'w') as wfile:
 			data = self.download_url(self.repo + self.keys['github'])
 			wfile.write(data)
 		
-		self.irc.iterate()
+		self.iterate()
+		return 0
+	
+	def iterate(self):
+		while True:
+			self.onITERATE()
+			time.sleep(30)
 		return 0
 	
 	def shorten_url(self, url):
@@ -46,12 +60,8 @@ class AutoGitBot(bot.ircBot):
 		return response
 	
 	def download_url(self, url):
-		try:
-			response 	= urllib.request.urlopen(url) 
-		except UnicodeEncodeError:
-			return 0
-		except:
-			return 0
+		response 	= urllib.request.urlopen(url)
+		 
 		return response.read().decode('utf-8')
 	
 	def onITERATE(self):
@@ -73,7 +83,7 @@ class AutoGitBot(bot.ircBot):
 				if hasattr(self, ev['type']):
 					func = getattr(self, ev['type'])
 					data = func(ev)
-					self.irc.privmsg('#ahkscript', data)
+					self.privmsg('#ahkscript', data)
 					
 			with open(self.def_dir + '/old_events', 'w') as wfile:
 					wfile.write(json.dumps(new_data))

@@ -15,7 +15,7 @@ def urlDownload( url ):
 	return response.read().decode('utf-8')
 
 
-def execute(parent, commands, irc, user, host, channel, params):
+def execute(parent, commands, user, host, channel, params):
 	if '&' in params:
 		search = ' '.join( params ).split('&')[0]
 	else:

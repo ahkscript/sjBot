@@ -9,7 +9,7 @@ meta_data = { "help": ["Searches google for an ahk related query.","Usage: &botc
 
 
 #https://www.googleapis.com/customsearch/v1?key=AIzaSyAJQbRWt3p4S5sAiHL_iiot87KcbEa0dsQ&cx=009062493091172133168:_o2f4moc9ce&q=
-def execute(parent, commands, irc, user, host, channel, params):
+def execute(parent, commands, user, host, channel, params):
 	
 	with open(os.path.dirname(os.path.realpath(__file__)) + '/docs.json', 'r') as docs:
 		docdata = json.loads(docs.read())
@@ -27,7 +27,7 @@ def execute(parent, commands, irc, user, host, channel, params):
 		try:
 			htmlData 	= parent.download_url( 'https://www.googleapis.com/customsearch/v1?key=AIzaSyAJQbRWt3p4S5sAiHL_iiot87KcbEa0dsQ&cx=009062493091172133168:_o2f4moc9ce&q=' + search )
 		except UnicodeDecodeError:
-			return {'Status': 0,'Text': 'No data found!', 'Error': 'No Error'}
+			return ['No data found!']
 
 		response = json.loads( htmlData )
 		title = response['items'][0]['title']

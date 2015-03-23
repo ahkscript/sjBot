@@ -10,17 +10,23 @@ def check_message(this, user):
 	
 	loop_data = message_data
 	if user in loop_data:
-		messages = message_data[user]
+		messages = loop_data[user]
+		remove = []
 		for sender in messages:
 			sent_messages = messages[sender]
 			ammount = str(len(sent_messages))
-			this.irc.privmsg(user, '{} has sent you {} message[s]:'.format(sender, ammount))
+			this.privmsg(user, '{} has sent you {} message[s]:'.format(sender, ammount))
 			
 			for message in sent_messages:
-				this.irc.privmsg(user, message)
+				this.privmsg(user, message)
 			
-			remove = sender
-		del message_data[user][remove]
+			remove.append(sender)
+		
+		for send in remove:
+			del message_data[user][send]
+		
+		if message_data[user] == {}:
+			del message_data[user]
 	
 	with open(this.def_dir + '/commands/messages', 'w') as mfile:
 		mfile.write(json.dumps(message_data))

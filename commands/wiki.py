@@ -3,7 +3,7 @@ import urllib.parse
 
 meta_data 	= { "help": ["Searches for a wiki page","Usage: &botcmdwiki <query>"], "aliases": ["wiki", "wik"], "owner": 0 }
 
-def execute(parent, commands, irc, user, host, channel, params):
+def execute(parent, commands, user, host, channel, params):
 	if len(params) == 0:
 		return [meta_data['help'][1]]
 	

@@ -25,4 +25,4 @@ def onPRIVMSG(this, *message):
 		except AttributeError:
 			pass
 	print( output )
-	this.irc.privmsg(message[2], output )
+	this.privmsg(message[2], output )

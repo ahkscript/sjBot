@@ -3,7 +3,7 @@ import os
 
 meta_data = { "help": ["Adds a link to the list of doc links.","Usage: &botcmdlink <name> <link>"], "aliases": ["link", "addlink"], "owner": 1 }
 
-def execute(parent, commands, irc, user, host, channel, params):
+def execute(parent, commands, user, host, channel, params):
 	if len(params) < 2:
 		return [meta_data['help'][1]]
 	with open(parent.def_dir + '/docs.json', 'r') as docs:

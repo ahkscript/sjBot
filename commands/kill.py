@@ -2,7 +2,7 @@ import random
 meta_data 	= { "help": ["Kills a person with a weapon.","Usage: &botcmdpaste"], "aliases": ["k", "kill"], "owner": 0 }
 
 
-def execute(parent, commands, irc, user, host, channel, params ):
+def execute(parent, commands, user, host, channel, params ):
 	weapons 		= [	"a small lion.",
 						"a dictionary",
 						"an angry mountain.",

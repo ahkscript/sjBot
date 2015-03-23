@@ -2,7 +2,7 @@ import random
 
 meta_data = { "help": ["Returns a random or specified gif from z0r.de","Usage: &botcmdz0r [number]"], "aliases": ["z0r", "zor",'z'], "owner": 0 }
 
-def execute(parent, commands, irc, user, host, channel, params):
+def execute(parent, commands, user, host, channel, params):
 	limit = 6774
 	if len(params) > 0:
 		number = params[0]

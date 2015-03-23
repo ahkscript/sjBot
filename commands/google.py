@@ -4,7 +4,7 @@ import html.parser
 meta_data 	= { "help": ["Searches google for a query.","Usage: &botcmdgoogle <query>"], "aliases": ["google", "g", "search"], "owner": 0 }
 
 
-def execute(parent, commands, irc, user, host, channel, params):
+def execute(parent, commands, user, host, channel, params):
 		try:		
 		
 			if len( params ) == 0:
@@ -23,4 +23,4 @@ def execute(parent, commands, irc, user, host, channel, params):
 
 		except IndexError:
 			return ['No data found!']
-		return ["\x02" + urllib.parse.unquote( title ) + "\x02 - " + command[5].shorten_url(url)]
+		return ["\x02" + urllib.parse.unquote( title ) + "\x02 - " + parent.shorten_url(url)]

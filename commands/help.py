@@ -1,7 +1,7 @@
 meta_data 	= { "help": ["Gives help on commands.","Usage: &botcmdhelp [command name]"], "aliases": ["help", "shelp"], "owner": 0 }
 
 
-def execute(parent, commands, irc, user, host, channel, params ):
+def execute(parent, commands, user, host, channel, params ):
 	output = []
 
 	if len( params ) > 0:

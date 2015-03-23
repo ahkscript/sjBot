@@ -1,7 +1,7 @@
 import random
 meta_data	= { "help": ["Answers a question with a eightball response.","Usage: &botcmdeightball <question>"], "aliases": ["random", "eight", "eightball", "8ball"], "owner": 0 }
 
-def execute(parent, commands, irc, user, host, channel, params ):
+def execute(parent, commands, user, host, channel, params ):
 	if len(params) == 0:
 		return ['This command needs more params.', meta_data['help'][1]]
 
