@@ -8,8 +8,7 @@ questions don't hesitate to contact me:
 	- IRC: irc.freenode.net, #Sjc_Bot
 	
 ##First off, i will explain how to modify sjBot so he doesn't use my credentials.
-You will find a sjbot.settings file in this directory, in there are
-things such as nickname, channels and bot trigger. You will NEED to change:
+You will find a sjbot.settings file in this directory, in there are things such as nickname, channels and bot trigger. You will NEED to change:
 	- nickname
 	- host
 	- user
@@ -17,8 +16,7 @@ things such as nickname, channels and bot trigger. You will NEED to change:
 	- channel_list
 	- owner_list
 	
-Those are the things that you will HAVE to change. The others can stay
-as they are until you wish to change them.
+Those are the things that you will HAVE to change. The others can stay as they are until you wish to change them.
 	
 ###Ill explain what all the settings are and what they do:
 	- network 	- The IRC network for the bot to join.
