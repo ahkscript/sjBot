@@ -1,0 +1,13 @@
+{
+	"network": "irc.freenode.net",
+	"port": 6667,
+	"nickname": "sjBot",
+	"host": "sjBot",
+	"user": "sjBot",
+	"realname": "Uptone-Software/sjBot",
+	"channel_list": ["#Sjc_Bot"],
+	"botcmd": {"default": "`", "#donationcoder": "."},
+	"default_cmd": {"default": "ahk", "#donationcoder": "google"},
+	"ignore": [".","n","r","`"],
+	"owner_list": ["Sjc1000@gateway/shell/elitebnc"]
+}

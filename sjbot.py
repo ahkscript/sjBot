@@ -28,20 +28,16 @@ from pprint import pprint
 
 
 class sjBot(bot):
-	botcmd = {'default': '`','#donationcoder': '.'}
-	default_cmd = {'default': 'ahk', '#donationcoder': 'google'}
-	ignore = ['.','n','r','`']
-	ownerlist = ['Sjc1000@gateway/shell/elitebnc']
-	channel_list = ['#Sjc_Bot','#ahkscript','#ahk','#donationcoder']
-	def __init__(self, network, port, keyfile='keys'):
+	def __init__(self, keyfile='keys'):
 		self.def_dir = os.path.dirname(os.path.realpath(__file__))
 		with open(self.def_dir + '/' + keyfile, 'r') as my_file:
 			self.keys = json.loads( my_file.read() )
+		self.getsettings()
 		pprint('Loading commands and plugins.', prefix=' ', timestamp=1)
 		self.commands = self.load_plugins(self.def_dir + '/commands/')
 		self.plugins = self.load_plugins(self.def_dir + '/plugins/')
 		pprint('Connecting to IRC.', prefix=' ', timestamp=1)
-		bot.__init__(self, network, port)
+		bot.__init__(self, self.network, self.port)
 		self.ident()
 		
 		try:
@@ -53,11 +49,21 @@ class sjBot(bot):
 			pprint('Something went wrong.', 'red', prefix=' ', timestamp=1)
 			raise
 	
+	def getsettings(self):
+		with open('sjbot.settings','r') as mfile:
+			data = mfile.read()
+			settings = json.loads(data)
+		required = ['nickname','user','host','realname','network','port','channel_list','default_cmd','botcmd','ignore']
+		for test in required:
+			if test not in settings:
+				print('Setting missing: ' + test)
+				sys.exit(0)
+				return 0
+		for key in settings:
+			setattr(self, key, settings[key])
+		return 0
+	
 	def startup(self):
-		self.nickname = 'sjBot'
-		self.host = 'uptonesoftware'
-		self.user = 'Sjc1000'
-		self.realname = 'Uptone Software/sjBot'
 		self.ident()
 		return 0
 	
@@ -208,4 +214,4 @@ class sjBot(bot):
 		return 0
 
 if __name__ == '__main__':
-	sjbot = sjBot('irc.freenode.net', 6667)
+	sjbot = sjBot()
