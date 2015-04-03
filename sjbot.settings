@@ -9,5 +9,5 @@
 	"botcmd": {"default": "`", "#donationcoder": "."},
 	"default_cmd": {"default": "ahk", "#donationcoder": "google"},
 	"ignore": [".","n","r","`"],
-	"owner_list": ["Sjc1000@gateway/shell/elitebnc"]
+	"ownerlist": ["Sjc1000@gateway/shell/elitebnc"]
 }
