@@ -53,7 +53,7 @@ class sjBot(bot):
 		with open('sjbot.settings','r') as mfile:
 			data = mfile.read()
 			settings = json.loads(data)
-		required = ['nickname','user','host','realname','network','port','channel_list','default_cmd','botcmd','ignore']
+		required = ['nickname','user','host','realname','network','port','channel_list','default_cmd','botcmd','ignore','ownerlist']
 		for test in required:
 			if test not in settings:
 				print('Setting missing: ' + test)
@@ -65,7 +65,20 @@ class sjBot(bot):
 	
 	def startup(self):
 		self.ident()
+		self.iterate()
 		return 0
+	
+	def iterate(self, timeout=60):
+		while True:
+			with open('sjbot.settings') as settings:
+				settings = json.loads(settings.read())
+			self.botcmd = settings['botcmd']
+			self.ownerlist = settings['ownerlist']
+			self.ignore = settings['ignore']
+			self.default_cmd = settings['default_cmd']
+			self.commands = self.load_plugins(self.def_dir + '/commands/')
+			self.plugins = self.load_plugins(self.def_dir + '/plugins/')
+			time.sleep(timeout)
 	
 	def start_monitor(self):
 		pprint('Starting user monitor.', 'yellow', prefix=' ', timestamp=1)
@@ -105,7 +118,6 @@ class sjBot(bot):
 		return response.read().decode('utf-8')
 	
 	def onALL(self, *params):
-		self.plugins = self.load_plugins(self.def_dir + '/plugins/')
 		mtype = params[1]
 		
 		for pl in self.plugins:
@@ -165,7 +177,6 @@ class sjBot(bot):
 		return 0
 	
 	def onPRIVMSG(self, uhost, channel, *message):
-		self.commands = self.load_plugins(self.def_dir + '/commands/')
 		user, host = uhost.split('!')
 		user = user[1:]
 		message = [x for x in message]
