@@ -33,6 +33,6 @@ def execute(parent, commands, user, host, channel, params):
 		title = response['items'][0]['title']
 		url = response['items'][0]['link']
 
-	except IndexError:
+	except (IndexError, KeyError):
 		return ['No data found!']
 	return ["\x02" + urllib.parse.unquote( title ) + "\x02 - " + parent.shorten_url(url)]

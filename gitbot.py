@@ -1,3 +1,4 @@
+#!/urs/bin/env python3
 from bot import bot
 import json
 import urllib.request

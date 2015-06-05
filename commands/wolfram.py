@@ -1,16 +1,21 @@
 import urllib.request
 import html.parser
 import re
+import xml.etree.ElementTree as ET
 meta_data 	= { "help": ["Searches google for an ahk related query.","Usage: &botcmdahk <query>"], "aliases": ["wolfram", "wa"], "owner": 0 }
 
 def execute(parent, commands, user, host, channel, params):
 	if len(params ) == 0:
 		return ["This command needs more params"]
 
-	url 		= 'http://api.wolframalpha.com/v2/query?input=' + '%20'.join( params ) + "&appid=" + parent.keys['wolfram']
-	htmlData	= parent.download_url( url )
-	try:		
-		res 			= re.findall('<plaintext>(.*?)</plaintext>', htmlData )
-		return ["\x02" + res[0] + "\x02 - " + html.parser.HTMLParser().unescape( res[1]).decode("utf-8")]
+	url = 'http://api.wolframalpha.com/v2/query?input=' + '%20'.join( params ) + "&appid=" + parent.keys['wolfram']
+	htmlData = parent.download_url( url )
+	root = ET.fromstring(htmlData)
+	items = root.findall('.//subpod')
+	if len(items) == 0:
+		return 'No data found!'
+	try:
+		output = items[0][0].text + ' - ' + items[1][0].text
 	except:
-		return ["\x02No Results Found!\x02"]
+		return 'No data found!'
+	return output

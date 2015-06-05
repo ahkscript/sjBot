@@ -6,4 +6,4 @@ def execute(parent, commands, user, host, channel, params):
 		url = "http://ahk.us.to/"
 	else:
 		url = "http://ahk.uk.to/"
-	return ['Please paste your code at the unofficial AutoHotkey pastebin: ' + url] 
+	return ['Please paste your code at the official AutoHotkey pastebin: ' + url] 

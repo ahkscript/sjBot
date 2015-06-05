@@ -6,8 +6,9 @@
 	"user": "sjBot",
 	"realname": "Uptone-Software/sjBot",
 	"channel_list": ["#Sjc_Bot"],
-	"botcmd": {"default": "`", "#donationcoder": "."},
+	"botcmd": {"default": ["."], "#donationcoder": [".","`"]},
 	"default_cmd": {"default": "ahk", "#donationcoder": "google"},
-	"ignore": [".","n","r","`"],
-	"ownerlist": ["Sjc1000@gateway/shell/elitebnc"]
+	"ignore": [".","n","r","`","_"],
+	"ownerlist": ["Sjc1000@gateway/shell/elitebnc", "kiwiirc.com/ip.180.181.27.230", "unaffiliated/sjc1000"],
+	"creds": {"username": "sjBot", "password": "sjbot_pass"}
 }

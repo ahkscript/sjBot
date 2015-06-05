@@ -16,6 +16,8 @@ def execute(parent, commands, user, host, channel, params):
 				text = text.replace(char, normal[chars.index(char)])
 			if char in normal:
 				text = text.replace(char, chars[normal.index(char)])
-		return [random.choice( faces ) + '︵ ' + text]
+		text = [x for x in text]
+		text.reverse()
+		return [random.choice( faces ) + '︵ ' + ''.join(text)]
 			
 	return [random.choice( faces ) + "︵ ┻━┻"]

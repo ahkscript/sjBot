@@ -4,9 +4,9 @@ import json
 
 
 def onPRIVMSG(this, *message):
-	reg = re.search("watch\?v=(.*?)(\&|\s+|$|#)", ' '.join( message[3:] ) )
+	reg = re.search("(yout.*v=|yout.*/)(.*?)(\&|\s+|$|#)", ' '.join( message[3:] ) )
 	try:	
-		url = reg.group(1)
+		url = reg.group(2)
 	except AttributeError:
 		return 0
 

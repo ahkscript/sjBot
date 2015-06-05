@@ -6,7 +6,9 @@ def check_message(this, user):
 		with open(this.def_dir + '/commands/messages', 'r') as mfile:
 			message_data = json.loads(mfile.read())
 	except FileNotFoundError:
-		message_data = json.dumps({})
+		message_data = {}
+	except ValueError:
+		message_data = {}
 	
 	loop_data = message_data
 	if user in loop_data:
