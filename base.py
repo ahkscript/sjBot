@@ -19,7 +19,8 @@ class base():
 	queue = []
 	connected = False
 
-	def __init__(self, network, port, rejoin=True):
+	def __init__(self, network, port, nickname, user, host, realname,
+				 rejoin=True):
 		"""__init__
 		Starts the bot base.
 		
@@ -29,7 +30,10 @@ class base():
 			rejoin:		True if you want the bot to attempt to rejoin
 						when he disconnects.
 		"""
-		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.nickname = nickname
+		self.host = host
+		self.user = user
+		self.realname = realname
 		self.network = network
 		self.port = port
 		self.rejoin = rejoin
@@ -44,6 +48,7 @@ class base():
 						10 seconds ( by default ) in between each try.
 			delay:		The delay in seconds between each try. 10 by default.
 		"""
+		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.display('Attempting to connect to IRC.')
 		self.connceted = False
 		for attempt in range(0, attempts):
@@ -58,6 +63,8 @@ class base():
 			else:
 				self.connected = True
 				self.display('[.green]Connected.')
+				self.identify(self.nickname, self.user, self.host,
+							  self.realname)
 				return True
 		return False
 
@@ -72,9 +79,6 @@ class base():
 		if connected is False:
 			self.display('Could not connect. Shutting down.')
 			self.shutdown()
-			return None
-		self.identify('sjBot', 'sjBot', 'Uptone-Software', 
-					  'Uptone-Software/sjBot')
 		return None
 
 	def identify(self, nickname, user, host, realname, password=None):
@@ -111,8 +115,14 @@ class base():
 		params:
 			data:	The data to send to IRC.
 		"""
-		self.display('< ' + data)
-		self.socket.send(bytes(data + '\r\n', 'utf-8'))
+		if isinstance(data, list):
+			for d in data:
+				self.send(d)
+			return None
+		self.display('< ' + data, 'green')
+		sent = self.socket.send(bytes(data + '\r\n', 'utf-8'))
+		if sent == 0:
+			self.try_rejoin()
 		return None
 
 	def main_loop(self):
@@ -179,14 +189,13 @@ class base():
 		for line in data.split('\r\n'):
 			if line == '':
 				continue
-			self.display('> ' + line)
+			self.display('> ' + line, 'yellow')
 			split = line.split(' ')
 			if len(split) < 2:
 				continue
 			
 			queue = self.queue
 			for index, event in enumerate(queue):
-				print( event )
 				if event['event'] == split[1]:
 					self.queue[index]['function'](*self.queue[index]['params'])
 				self.queue.pop(index)
@@ -240,7 +249,7 @@ class base():
 		self.socket.close()
 		return None
 
-	def display(self, data, end='\n'):
+	def display(self, data, color='purple'):
 		"""display
 		Displays some text in the IRC. This is basically a wrapper for
 		the print function, although, you can add your own to your bot class
@@ -251,7 +260,7 @@ class base():
 		params:
 			data:	The data that gets displayed.
 		"""
-		print( data, end=end)
+		cprint('[.' +  color + ']' + data)
 		return None
 
 	def privmsg(self, channel, data):
@@ -285,7 +294,25 @@ class base():
 		params:
 			channel:	The channel to join.
 		"""
+		if isinstance(channel, list):
+			for chan in channel:
+				self.send('JOIN ' + chan)
+			return None
 		self.send('JOIN ' + channel)
+		return None
+
+	def leave(self, channel):
+		"""leave
+		Leaves a channel.
+
+		params:
+			channel:	The channel to leave.
+		"""
+		if isinstance(channel, list):
+			for chan in channel:
+				self.send('PART ' + chan)
+			return None
+		self.send('PART ' + channel)
 		return None
 
 	def nick(self, nickname):

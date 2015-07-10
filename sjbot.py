@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+
 '''
     sjBot is a Python IRC Bot made by Sjc1000 ( Steven J. Core )
             Copyright © 2015, Steven J. Core
@@ -30,9 +32,13 @@ import html.entities
 from cprint import cprint
 from base import base
 from threads import asthread
+import Github
 
 
 def timestamp():
+    """timestamp
+    Returns a timestamp in the format of [HH:MM:SS]
+    """
     time_object = time.localtime(time.time())
     return '[{:0>2}:{:0>2}:{:0>2}]'.format(time_object[3],
               time_object[4],time_object[5])
@@ -41,6 +47,9 @@ def timestamp():
 class sjBot(base):
 
     last_user = None
+    last_greeting = None
+    showrss = False
+    char_limit = 400
 
     def __init__(self, keyfile='keys'):
         """__init__
@@ -55,7 +64,9 @@ class sjBot(base):
         self.commands = self.load_plugins(self.def_dir + '/commands/')
         self.plugins = self.load_plugins(self.def_dir + '/plugins/')
         self.display('Connecting to IRC.')
-        base.__init__(self, self.network, self.port)
+        Github.token = self.keys['github']
+        base.__init__(self, self.network, self.port, self.nickname, self.user,
+                      self.host, self.realname)
     
     def getsettings(self):
         """getsettings
@@ -89,12 +100,10 @@ class sjBot(base):
         if connected is False:
             self.display('[.red] Could not connect to the network.')
             return None
-        self.identify(self.nickname, self.user, self.host, self.realname)
-        iterate_thread = threading.Thread(target=self.iterate)
-        iterate_thread.daemon = True
-        iterate_thread.start()
+        self.iterate()
         return None
     
+    @asthread(True)
     def iterate(self, timeout=60):
         """iterate
         Reloads most of the data. Giving sjBot the ability to update without
@@ -167,11 +176,17 @@ class sjBot(base):
         return response.read().decode('utf-8')
 
     def google(self, query):
+        """google
+        Searches the google api for a query
+        """
         response = self.download_url('https://ajax.googleapis.com/ajax/'
             'services/search/web?v=1.0&q=' + '%20'.join(query.split(' ')))
         return response
 
     def html_decode(self, data):
+        """html_decode
+        Decodes the html characters from a string
+        """
         for char in html.entities.html5:
             if '&' + char + ';' in data:
                 data = data.replace('&' + char + ';', 
@@ -199,7 +214,7 @@ class sjBot(base):
         If anyone has specified they want to see this data, it shows them.
         """
         if nickname == self.nickname:
-            return 0
+            return None
         
         user = ohost.split('!')[0][1:]
         uhost = ohost.split('!')[1]
@@ -219,7 +234,7 @@ class sjBot(base):
         If anyone has specified that they want to see this data, it shows them.
         """
         if nickname == self.nickname:
-            return 0
+            return None
         
         user = ohost[1:]
         
@@ -254,9 +269,13 @@ class sjBot(base):
         """
         username = self.creds['username']
         password = self.creds['password']
+        self.display('[.yellow] Sending credentials to NickServ.')
         self.send('PRIVMSG Nickserv :Identify ' + username + 
                   ' ' + self.keys[password])
-        self.display('[.yellow] Sending credentials to NickServ.')
+        return None
+
+    def on396(self, *junk):
+        self.join('#Sjc_Bot')
         return None
     
     @asthread(True)
@@ -285,8 +304,10 @@ class sjBot(base):
         """onINVITE
         When someone invites the bot to a channel.
         """
+        nick = host.split('!')[0][1:]
+        self.display('Invited to ' + channel + '. Joining.')
         self.queue.append({'function': self.privmsg, 'params': (channel[1:],
-            'You wanted to see me? ;)'), 'event': 'JOIN'})
+            'You wanted to see me, ' + nick + '? ;)'), 'event': 'JOIN'})
         self.join(channel)
         return None
     
@@ -338,22 +359,40 @@ class sjBot(base):
                     uhost for us in self.ownerlist):
                 self.privmsg(channel, 'You do not have permission to use '
                              'that!')
-                return 0
+                return None
             
-            response = self.commands[cmd].execute(self, self.commands, user, 
-                                                  host, channel, params)
+            try:
+                response = self.commands[cmd].execute(self, self.commands, user, 
+                                                      host, channel, params)
+            except Exception as error:
+                self.privmsg(channel, 'An error has occured: ' + str(error))
+                return None
+
             if response == 0:
-                return 0
+                return None
+            
             if isinstance(response, int):
                 response = [str(response)]
             if isinstance(response, str):
                 response = [response]
             for re in response:
-                self.privmsg(channel, re.replace('&botcmd', botcmd))
-        return 0
+                if len(re) > self.char_limit:
+                    gist = Github.Gists.create_gist(
+                            {'Output for ' + channel: {'content': 
+                             re.replace('&botcmd', botcmd)}}, 
+                             'sjBot gists post.', False)
+                    self.privmsg(channel, gist['html_url'])
+                else:
+                    self.privmsg(channel, re.replace('&botcmd', botcmd))
+        return None
 
-    def display(self, data):
-        cprint(data, '[.purple]' + timestamp() + '[./purple] ')
+    def display(self, data, t_color='purple'):
+        """display
+        the function that gets called whenever the bot wants to 
+        display some data.
+        """
+        cprint(data, '[.' + t_color + ']' + timestamp() + '[./' + t_color + 
+               '] ')
         return None
     
     def is_command(self, command):
@@ -384,6 +423,7 @@ def main():
         cprint('[.red] Something went wrong.', '[.purple]' + timestamp() + 
                '[./purple] ')
         raise
+
     return None
 
 

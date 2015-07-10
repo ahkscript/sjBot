@@ -2,6 +2,7 @@ import math
 import random
 import time
 import sys
+import re
 
 meta_data = { "help": ["Nothing."], "aliases": ["execute", "exec",'ex', 'e'], "owner": 0 }
 
@@ -15,6 +16,7 @@ global_vars = {'__builtins__': {'time': time, 'random': random, 'range': range, 
 def execute(parent, commands, user, host, channel, params):
     global local_vars
     remove = ['import', 'while']
+    regremove = ['.*\d\*\*\(*']
     local_vars = {'user': user, 'host': host, 'channel': channel, 'params': params}
     
     if any(u in host for u in parent.ownerlist):
@@ -29,6 +31,8 @@ def execute(parent, commands, user, host, channel, params):
             continue
         if line == '':
             continue
+        if any(re.search(a, line) is not None for a in regremove):
+            line = "print('Could not process that.'')"
         safe = safe + '\n' + line
     try:
         exec(safe, global_vars, local_vars)
