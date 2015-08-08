@@ -1,5 +1,5 @@
 import json
-meta_data	= { 'help': ['Saves a message to be sent to a user when they join a channel next.', 'Usage: &botcmdmessage <user> <message>'], 'aliases': ['message', 'pounce'], 'owner': 0 }
+meta_data	= { 'help': ['Saves a message to be sent to a user when they join a channel next.', 'Usage: &botcmdmessage <user> <message>'], 'aliases': ['message', 'pounce', 'msg'], 'owner': 0 }
 
 def execute(parent, commands, user, host, channel, params):
 	if len(params) < 2:

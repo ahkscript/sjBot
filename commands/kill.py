@@ -2,8 +2,7 @@ import random
 meta_data 	= { "help": ["Kills a person with a weapon.","Usage: &botcmdkill <person> [weapon]"], "aliases": ["k", "kill"], "owner": 0 }
 
 
-def execute(parent, commands, user, host, channel, params ):
-	weapons 		= [	"a small lion.",
+weapons 		= [	"a small lion.",
 						"a dictionary",
 						"an angry mountain.",
 						"the power of 3.",
@@ -14,10 +13,10 @@ def execute(parent, commands, user, host, channel, params ):
 						"a bowtie.",
 						"tlm.",
 						"a rraaaiiinnboww trout.",
-						"bordem."
-					  ]		
-
-
+						"bordem.",
+						"the power of 1000 suns."
+					  ]
+def execute(parent, commands, user, host, channel, params ):
 
 	if len( params ) == 0:
 		return {'Status': -1, 'Text': "This command needs more params", 'Error': 'Needs more params'}

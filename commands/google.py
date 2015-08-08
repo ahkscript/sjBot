@@ -14,12 +14,14 @@ def execute(parent, commands, user, host, channel, params):
 			except UnicodeDecodeError:
 				return ['No data found!']
 
-			with open('more.search', 'r') as more:
+			with open('commands/more.search', 'w') as more:
 				more.write(htmlData)
+
 			response = json.loads( htmlData )
-			title = response['items'][0]['title']
-			url = response['items'][0]['link']
+			print( response )
+			title = response['responseData']['results'][0]['titleNoFormatting']
+			url = response['responseData']['results'][0]['url']
 
 		except IndexError:
 			return ['No data found!']
-		return ["\x02" + urllib.parse.unquote( title ) + "\x02 - " + parent.shorten_url(url)]
+		return ["\x02" + parent.html_decode( title ) + "\x02 - " + parent.shorten_url(url)]

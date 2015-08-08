@@ -336,3 +336,7 @@ class base():
 		"""
 		self.send('NOTICE ' + user + ' :' + data)
 		return None
+
+
+if __name__ == '__main__':
+	help(base)

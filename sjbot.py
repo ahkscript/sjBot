@@ -49,7 +49,6 @@ class sjBot(base):
     last_user = None
     last_greeting = None
     showrss = False
-    char_limit = 400
 
     def __init__(self, keyfile='keys'):
         """__init__
@@ -61,8 +60,8 @@ class sjBot(base):
             self.keys = json.loads( my_file.read() )
         self.getsettings()
         self.display('Loading commands and plugins.')
-        self.commands = self.load_plugins(self.def_dir + '/commands/')
-        self.plugins = self.load_plugins(self.def_dir + '/plugins/')
+        self.commands = self.load_plugins(self.def_dir + '/commands/', 'cmd_')
+        self.plugins = self.load_plugins(self.def_dir + '/plugins/', 'plg_')
         self.display('Connecting to IRC.')
         Github.token = self.keys['github']
         base.__init__(self, self.network, self.port, self.nickname, self.user,
@@ -78,7 +77,7 @@ class sjBot(base):
             settings = json.loads(data)
         required = ['creds','nickname','user','host','realname','network',
                     'port','channel_list','default_cmd','botcmd','ignore',
-                    'ownerlist']
+                    'ownerlist', 'char_limit']
         for check in required:
             if check not in settings:
                 self.display('[.red]Setting missing: [.yellow]' + check)
@@ -116,8 +115,10 @@ class sjBot(base):
             self.ownerlist = settings['ownerlist']
             self.ignore = settings['ignore']
             self.default_cmd = settings['default_cmd']
-            self.commands = self.load_plugins(self.def_dir + '/commands/')
-            self.plugins = self.load_plugins(self.def_dir + '/plugins/')
+            self.char_limit = settings['char_limit']
+            self.commands = self.load_plugins(self.def_dir + '/commands/', 'cmd_')
+            self.plugins = self.load_plugins(self.def_dir + '/plugins/', 'plg_')
+            print('Iterate')
             time.sleep(timeout)
         return None
     
@@ -141,7 +142,7 @@ class sjBot(base):
         self.display('Monitoring users: ' + ', '.join(users))
         return None
     
-    def load_plugins(self, plugin_folder):
+    def load_plugins(self, plugin_folder, prefix):
         """load_plugins
         Loads all the commands and plugins. Using the imp library.
         """
@@ -151,7 +152,7 @@ class sjBot(base):
             if not f.endswith('.py'):
                 continue
             name = f[:f.index('.')]
-            plugins[name] = imp.load_source('pl_' + name, plugin_folder  + f)
+            plugins[name] = imp.load_source(prefix + name, plugin_folder  + f)
         return plugins
     
     def shorten_url(self, url):
@@ -171,9 +172,17 @@ class sjBot(base):
         """
         try:
             response = urllib.request.urlopen(url)
-        except:
+        except Exception:
             return False
-        return response.read().decode('utf-8')
+
+        try:
+            decoded = response.read().decode("utf-8")
+        except UnicodeDecodeError:
+            try:
+                decoded = response.read().decode('utf-16')
+            except UnicodeDecodeError:
+                return response.read()
+        return decoded
 
     def google(self, query):
         """google
@@ -274,8 +283,14 @@ class sjBot(base):
                   ' ' + self.keys[password])
         return None
 
+    def on422(self, *junk):
+        for chan in self.channel_list:
+            self.join(chan)
+        return None
+
     def on396(self, *junk):
-        self.join('#Sjc_Bot')
+        for chan in self.channel_list:
+            self.join(chan)
         return None
     
     @asthread(True)
@@ -296,6 +311,8 @@ class sjBot(base):
         """onKICK
         rejoins a channel when he has been kicked.
         """
+        self.queue.append({'function': self.privmsg, 'params': (channel, 
+                          "You can't stop meeee!"), 'event': 'JOIN'})
         self.join(channel)
         return None
 
@@ -318,7 +335,7 @@ class sjBot(base):
         sjBot checks for a command, and does all the command stuff then will
             return any data given by the command.
         """
-        self.load_plugins(self.def_dir + '/commands/')
+        self.load_plugins(self.def_dir + '/commands/', 'cmd_')
         user, host = uhost.split('!')
         user = user[1:]
         self.last_user = user
@@ -337,13 +354,13 @@ class sjBot(base):
                     botcmd = bt
                     break
         if not isinstance(botcmd, list):
-            command = message[0][len(botcmd):]
+            command = message[0][len(botcmd):].lower()
             
             if any(command.startswith(c) for c in self.ignore):
                 return 0
             params = message[1:]
             
-            cmd = self.is_command(command.lower())
+            cmd = self.is_command(command)
             
             if cmd == 0:
                 if channel in self.default_cmd:

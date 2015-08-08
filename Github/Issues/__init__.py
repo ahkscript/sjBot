@@ -5,7 +5,7 @@ import Github
 
 
 def get_issues(filter='assigned', state='open', labesl=None, sort=None,
-			   direction='desc', since=None):
+			  direction='desc', since=None):
 	data = {'filter': filter, 'state': state, 'labels': labels, 'sort': sort,
 			'direction': direction, 'since': since}
 	response = Github.api(Github.base_url + 'issues',
@@ -15,8 +15,8 @@ def get_issues(filter='assigned', state='open', labesl=None, sort=None,
 
 
 def get_repo_issues(user, repo, milestone='*', state='open', assignee='*',
-				    creator=None, mentioned=None, labels=None, sort='created',
-				    direction='desc', since=None):
+				  creator=None, mentioned=None, labels=None, sort='created',
+				  direction='desc', since=None):
 	data = {'milestone': milestone, 'state': state, 'assignee': assignee,
 			'creator': creator, 'mentioned': mentioned, 'labels': labels,
 			'sort': sort, 'direction': direction, 'since': since}
@@ -28,7 +28,7 @@ def get_repo_issues(user, repo, milestone='*', state='open', assignee='*',
 
 
 def create_issues(user, repo, title, body, assignee=None, milestone=None,
-				  labels=None):
+				labels=None):
 	data = {'title': title, 'body': body, 'assignee': assignee,
 	        'milestone': milestone, 'labels': labels}
 	response = Github.api(Github.base_url + 'repos/' + user + '/' + repo +
@@ -39,7 +39,7 @@ def create_issues(user, repo, title, body, assignee=None, milestone=None,
 
 
 def edit_issues(user, repo, issue_number, title, body, assignee=None,
-			    state='open', milestone=None, labels=None):
+			  state='open', milestone=None, labels=None):
 	data = {'title': title, 'body': body, 'assignee': assignee,
 			'state': state, 'milestone': milestone, 'labels': labels}
 	response = Github.api(Github.base_url + 'repos/' + user + '/' + repo +

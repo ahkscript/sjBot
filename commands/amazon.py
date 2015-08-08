@@ -10,6 +10,9 @@ def execute(parent, commands, user, host, channel, params ):
 	except UnicodeDecodeError:
 		return ['No Data Found!']
 	
+	with open('commands/more.search', 'w') as more:
+		more.write(download)
+
 	response = json.loads(download)
 	try:
 		title = response['items'][0]['title']

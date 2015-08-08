@@ -10,6 +10,8 @@
 	to use a different api key for everything since i did not
 	include mine. I can't have just anyone using my keys, sorry.
 	
+	Please read the PDF file for more info on how to make a plugin
+	
 	
 	sjBot is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by

@@ -43,7 +43,7 @@ def decode(response):
 
 
 def commit_to_master(user, repo, files, commit_message, overwrite=False,
-				     name=None, email=None, date=None):
+				   name=None, email=None, date=None):
 	ref = Github.Reference.get_reference(user, repo)
 	base_commit = Github.Commits.get_commit(user, repo, ref['object']['sha'])
 	if overwrite is False:

@@ -2,7 +2,7 @@ import urllib.request
 import html.parser
 import re
 import xml.etree.ElementTree as ET
-meta_data 	= { "help": ["Searches google for an ahk related query.","Usage: &botcmdahk <query>"], "aliases": ["wolfram", "wa"], "owner": 0 }
+meta_data 	= { "help": ["Requests information from Wolfram Alpha", "&botcmdwolfram <query>"], "aliases": ["wolfram", "wa"], "owner": 0 }
 
 def execute(parent, commands, user, host, channel, params):
 	if len(params ) == 0:
