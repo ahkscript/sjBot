@@ -18,7 +18,7 @@ def execute(parent, commands, user, host, channel, params):
 		search 		= '%20'.join( params ).replace("\r\n", "")
 		
 		try:
-			htmlData 	= parent.download_url( 'https://www.googleapis.com/customsearch/v1?key=AIzaSyAJQbRWt3p4S5sAiHL_iiot87KcbEa0dsQ&cx=009062493091172133168:xwjfsl5agjc&q=' + search )
+			htmlData 	= parent.download_url( 'https://www.googleapis.com/customsearch/v1?key=' + parent.keys['google'] + '&cx=009062493091172133168:xwjfsl5agjc&q=' + search )
 		except UnicodeDecodeError:
 			return ['No data found!']
 

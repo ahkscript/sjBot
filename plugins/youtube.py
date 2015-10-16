@@ -12,11 +12,12 @@ def onPRIVMSG(this, host, privmsg, channel, *message):
 	except AttributeError:
 		return 0
 
-	youtubedata = this.download_url( 'https://www.googleapis.com/youtube/v3/videos?id=' + url + '&key=AIzaSyAJQbRWt3p4S5sAiHL_iiot87KcbEa0dsQ&part=snippet,contentDetails,statistics,status' )
+	youtubedata = this.download_url( 'https://www.googleapis.com/youtube/v3/videos?id=' + url + '&key=' + this.keys['google'] + '&part=snippet,contentDetails,statistics,status' )
 	
 	response = json.loads( youtubedata )
 	time = response['items'][0]['contentDetails']['duration'][2:].replace("M", ":").replace("S", "").replace("H", ":").split(":")
-	
+	if len(time) == 1:
+		time = ['0'] + time
 	for index, val in enumerate(time):
 		time[index] = '%02d' % (int(val),)
 	

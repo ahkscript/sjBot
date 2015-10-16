@@ -10,7 +10,7 @@ def execute(parent, commands, user, host, channel, params):
 	search = 'site:http://en.wikipedia.org%20' + '%20'.join(params)
 	print( search )
 	try:
-		search_data = parent.download_url('https://www.googleapis.com/customsearch/v1?key=AIzaSyAJQbRWt3p4S5sAiHL_iiot87KcbEa0dsQ&cx=009062493091172133168:4ckmchbpuzy&q=' + search)
+		search_data = parent.download_url('https://www.googleapis.com/customsearch/v1?key=A' + parent.keys['google'] + 'Q&cx=009062493091172133168:4ckmchbpuzy&q=' + search)
 	except UnicodeDecodeError:
 		return ['No data found!']
 	
