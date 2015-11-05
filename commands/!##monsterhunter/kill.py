@@ -1,6 +1,6 @@
 import random
-meta_data 	= { "help": ["Kills a person with a weapon.","Usage: &botcmdkill <person> [weapon]"], "aliases": ["k", "kill"], "owner": 0 }
 
+meta_data 	= { "help": ["Kills a person with a weapon.","Usage: &botcmdkill <person> [weapon]"], "aliases": ["k", "kill"], "owner": 0 }
 
 weapons 		= [	"a small lion.",
 						"a dictionary",
@@ -17,10 +17,8 @@ weapons 		= [	"a small lion.",
 						"the power of 1000 suns."
 					  ]
 def execute(parent, commands, user, host, channel, params ):
-
 	if len( params ) == 0:
-		return {'Status': -1, 'Text': "This command needs more params", 'Error': 'Needs more params'}
-
+		return ['This command needs more params']
 	if len( params ) < 2:
 		weapon 		= random.choice( weapons )
 	else:
@@ -29,4 +27,4 @@ def execute(parent, commands, user, host, channel, params ):
 	user 		= params[0]
 
 
-	return ['\x01ACTION Kills ' + str( user ) + " with " + weapon + '\x01']
+	return ['\x01ACTION kills ' + str( user ) + " with " + weapon + '\x01']

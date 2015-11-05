@@ -1,4 +1,7 @@
+
+
 import random
+
 meta_data 	= { "help": ["This command says hello to a user.", "Usage: &botcmdhello [user]"], "aliases": ["hello", "hey", "hi"], "owner": 0 }
 
 

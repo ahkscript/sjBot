@@ -1,4 +1,6 @@
 import random
+
+
 meta_data   = { "help": ["Dances","Usage: &botcmddance"], "aliases": ["dance", "d"], "owner": 0 }
 
 

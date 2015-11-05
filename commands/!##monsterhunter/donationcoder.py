@@ -6,11 +6,11 @@ import difflib
 import sys
 
 meta_data = { "help": ["Searches google for a donation coder related query.","Usage: &botcmddc <query>"], "aliases": ["donationcoder", "dc"], "owner": 0 }
-
+channel_specific = ['#donationcoder']
 
 
 def execute(parent, commands, user, host, channel, params):
-
+	params = [urllib.parse.quote(x) for x in params]
 	try:
 		if len( params ) == 0:
 			return ['Need more params','Usage: &botcmddc <query>']

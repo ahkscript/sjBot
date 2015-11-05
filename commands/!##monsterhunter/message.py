@@ -1,4 +1,5 @@
 import json
+
 meta_data	= { 'help': ['Saves a message to be sent to a user when they join a channel next.', 'Usage: &botcmdmessage <user> <message>'], 'aliases': ['message', 'pounce', 'msg'], 'owner': 0 }
 
 def execute(parent, commands, user, host, channel, params):
@@ -14,9 +15,12 @@ def execute(parent, commands, user, host, channel, params):
 		messages = {}
 	
 	sender = user
-	reciever = params[0]
+	reciever = params[0].lower()
 	message = ' '.join(params[1:])
 	
+	if reciever in ['nickserv', 'chanserv', 'nickserv']:
+		return ['I have been told to not send messages to them.']
+
 	if reciever not in messages:
 		messages[reciever] = {}
 	

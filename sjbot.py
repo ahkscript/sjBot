@@ -48,7 +48,8 @@ class sjBot(base):
 
     last_user = None
     last_greeting = None
-    showrss = False
+    show_rss = False
+    previous_rss = None
 
     def __init__(self, keyfile='keys'):
         """__init__
@@ -60,7 +61,7 @@ class sjBot(base):
             self.keys = json.loads( my_file.read() )
         self.getsettings()
         self.display('Loading commands and plugins.')
-        self.commands = self.load_plugins(self.def_dir + '/commands/', 'cmd_')
+        self.commands = self.load_commands(self.def_dir + '/commands/', 'cmd_')
         self.plugins = self.load_plugins(self.def_dir + '/plugins/', 'plg_')
         self.display('Connecting to IRC.')
         Github.token = self.keys['github']
@@ -116,9 +117,12 @@ class sjBot(base):
             self.ignore = settings['ignore']
             self.default_cmd = settings['default_cmd']
             self.char_limit = settings['char_limit']
-            self.commands = self.load_plugins(self.def_dir + '/commands/', 'cmd_')
+            self.commands = self.load_commands(self.def_dir + '/commands/', 'cmd_')
             self.plugins = self.load_plugins(self.def_dir + '/plugins/', 'plg_')
             print('Iterate')
+            for plugin in self.plugins:
+                if hasattr(self.plugins[plugin], 'iterate'):
+                    getattr(self.plugins[plugin], 'iterate')(self)
             time.sleep(timeout)
         return None
     
@@ -144,7 +148,7 @@ class sjBot(base):
     
     def load_plugins(self, plugin_folder, prefix):
         """load_plugins
-        Loads all the commands and plugins. Using the imp library.
+        Loads all the plugins. Using the imp library.
         """
         plugins = {}
         files = listdir(plugin_folder)
@@ -154,6 +158,34 @@ class sjBot(base):
             name = f[:f.index('.')]
             plugins[name] = imp.load_source(prefix + name, plugin_folder  + f)
         return plugins
+
+    def load_commands(self, command_folder, prefix='cmd_'):
+        """load_commands
+        Loads the commands from the commands subfolder
+        """
+        commands = {}
+        for folder, subdir, files in os.walk(command_folder):
+            channel = folder.replace(command_folder, '')
+            if channel.endswith('__'):
+                continue
+            if ',' in channel:
+                for ch in channel.split(','):
+                    for x in files:
+                        if x.endswith('.py') is False:
+                            continue
+                        if ch not in commands:
+                            commands[ch] = {}
+                        commands[ch][x[:-3]] = imp.load_source(prefix + x[:-3],
+                            folder + '/' + x)
+            else:
+                for x in files:
+                    if x.endswith('.py') is False:
+                        continue
+                    if channel not in commands:
+                        commands[channel] = {}
+                    commands[channel][x[:-3]] = imp.load_source(prefix + x[:-3],
+                        folder + '/' + x)
+        return commands
     
     def shorten_url(self, url):
         """shorten_url
@@ -212,8 +244,11 @@ class sjBot(base):
         
         for pl in self.plugins:
             if hasattr(self.plugins[pl], 'on' + mtype):
-                function = getattr(self.plugins[pl], 'on' + mtype)
-                function(self, *params)
+                try:
+                    function = getattr(self.plugins[pl], 'on' + mtype)
+                    function(self, *params)
+                except Exception as Error:
+                    print( 'Error in {} {}'.format(pl, Error) )
         return None
     
     @asthread(True)
@@ -281,6 +316,7 @@ class sjBot(base):
         self.display('[.yellow] Sending credentials to NickServ.')
         self.send('PRIVMSG Nickserv :Identify ' + username + 
                   ' ' + self.keys[password])
+        #self.send('JOIN #Sjc_Bot')
         return None
 
     def on422(self, *junk):
@@ -311,6 +347,8 @@ class sjBot(base):
         """onKICK
         rejoins a channel when he has been kicked.
         """
+        if host.split('!')[0][1:] != self.nickname:
+            return None
         self.queue.append({'function': self.privmsg, 'params': (channel, 
                           "You can't stop meeee!"), 'event': 'JOIN'})
         self.join(channel)
@@ -335,13 +373,12 @@ class sjBot(base):
         sjBot checks for a command, and does all the command stuff then will
             return any data given by the command.
         """
-        self.load_plugins(self.def_dir + '/commands/', 'cmd_')
         user, host = uhost.split('!')
         user = user[1:]
         self.last_user = user
-        message = [x for x in message]
+        message = list(message)
         message = [message[0][1:]] + message[1:]
-        
+        usable_commands = self.build_commandlist(channel, host)
         if channel in self.botcmd:
             botcmd = self.botcmd[channel]
         else:
@@ -360,7 +397,7 @@ class sjBot(base):
                 return 0
             params = message[1:]
             
-            cmd = self.is_command(command)
+            cmd = self.is_command(command, usable_commands)
             
             if cmd == 0:
                 if channel in self.default_cmd:
@@ -372,27 +409,31 @@ class sjBot(base):
             if channel == self.nickname:
                 channel = user
             self.display('Command ' + command + ' received')
-            if self.commands[cmd].meta_data['owner'] == 1 and not any(us in 
+            if usable_commands[cmd].meta_data['owner'] == 1 and not any(us in 
                     uhost for us in self.ownerlist):
                 self.privmsg(channel, 'You do not have permission to use '
                              'that!')
                 return None
             
             try:
-                response = self.commands[cmd].execute(self, self.commands, user, 
+                response = usable_commands[cmd].execute(self, usable_commands, user, 
                                                       host, channel, params)
             except Exception as error:
+                raise
                 self.privmsg(channel, 'An error has occured: ' + str(error))
                 return None
 
-            if response == 0:
+            if response == 0 or response == None:
                 return None
             
             if isinstance(response, int):
                 response = [str(response)]
             if isinstance(response, str):
                 response = [response]
-            for re in response:
+            for ind, re in enumerate(response):
+                if ind == 0 and re == 'PM':
+                    channel = user
+                    continue
                 if len(re) > self.char_limit:
                     gist = Github.Gists.create_gist(
                             {'Output for ' + channel: {'content': 
@@ -403,6 +444,13 @@ class sjBot(base):
                     self.privmsg(channel, re.replace('&botcmd', botcmd))
         return None
 
+    def github_paste(self, data):
+        gist = Github.Gists.create_gist(
+                            {'Paste': {'content': 
+                             data}}, 
+                             'sjBot gists post.', False)
+        return gist['html_url']
+
     def display(self, data, t_color='purple'):
         """display
         the function that gets called whenever the bot wants to 
@@ -412,14 +460,34 @@ class sjBot(base):
                '] ')
         return None
     
-    def is_command(self, command):
+    def build_commandlist(self, channel, host):
+        """build_commandlist
+        This finds and uses all possible commands.
+        This drives the channel speicific functionality.
+        """
+        usable = {}
+        print( self.commands.keys() )
+        for c in self.commands:
+            if c.startswith('!') is False and c == channel:
+                for command in self.commands[c]:
+                    usable[command] = self.commands[c][command]
+            if c.startswith('!') is True and c[1:] != channel:
+                for command in self.commands[c]:
+                    usable[command] = self.commands[c][command]
+            if any(us in host for us in self.ownerlist):
+                print( self.commands.keys() )
+                for command in self.commands['owner']:
+                    usable[command] = self.commands['owner'][command]
+        return usable
+
+    def is_command(self, command, commands):
         """is_command
         Checks if a command is known to the bot. It also checks the aliases.
         If it is known, it will return the command name.
         If its an alias, it will return the real name of the command.
         """
-        for cm in self.commands:
-            if any(command == c for c in self.commands[cm].meta_data[
+        for cm in commands:
+            if any(command == c for c in commands[cm].meta_data[
                    'aliases']):
                 return cm
         return False
