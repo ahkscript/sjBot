@@ -1,16 +1,27 @@
 #!/usr/bin/env python3
 
 
-import urllib.request
+import urllib.parse
 import json
 
 
-meta_data = {'help': ['Searches youtube for a video.'], 'aliases': ['youtube', 'yout', 'ytb'], 'owner': 0}
+aliases = ['ytb', 'y', 'yt']
 
-def execute(parent, commands, user, host, channel, params):
-	search = '%20'.join(params)
-	data = parent.download_url('https://www.googleapis.com/youtube/v3/search?key=' + parent.keys['google'] + '&part=id,snippet&q=' + search)
-	results = json.loads(data)
-	if 'videoId' not in results['items'][0]['id']:
-		return 'Could not find info for that video.'
-	return '\x02' + results['items'][0]['snippet']['title'] + '\x02 - https://www.youtube.com/watch?v=' + results['items'][0]['id']['videoId']
+
+def youtube(con, sjBot, commands, trigger, host, channel, *query):
+    """Searches youtube for a video"""
+    api_key = sjBot['settings']['google_key']
+    download = sjBot['url_download']
+    query_string = urllib.parse.quote(' '.join(query))
+    query_url = ('https://www.googleapis.com/youtube/v3/search?key={}'
+                '&part=id,snippet&q={}'.format(api_key, query_string))
+    result_data = download(query_url)
+    youtube_data = json.loads(result_data)
+    try:
+        item = youtube_data['items'][0]
+        title = item['snippet']['title']
+        vid_id = item['id']['videoId']
+        vid_url = 'https://youtu.be/{}'.format(vid_id)
+    except Exception:
+        return 'Could not find info for that video.'
+    return '\x02{}\x02 - {}'.format(title, vid_url)

@@ -31,17 +31,16 @@ def help(con, sjBot, commands, trigger, host, channel, command=None):
                 if i < 6:
                     continue
 
-                print( params[p].kind )
-                print( params[p].VAR_POSITIONAL )
-
                 if (params[p].default == params[p].empty and 
                         params[p].kind != params[p].VAR_POSITIONAL):
                     param_info += ' \x02<{}>\x02'.format(p)
-                    continue
                 elif params[p].kind == params[p].VAR_POSITIONAL:
                     param_info += ' \x1D*{}\x1D'.format(p)
-                elif params[p].kind == params[p].POSITIONAL_OR_KEYWORD:
+                else:
                     param_info += ' \x1F[{}]\x1F'.format(p)
 
             output.append(param_info)
-    return output
+    user = host.split('!')[0][1:]
+    for line in output:
+        con.privmsg(user, line)
+    return None

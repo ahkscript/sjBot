@@ -1,342 +1,358 @@
 #!/usr/bin/env python3
-"""
-A simple IRC base for python3.
-This class makes using IRC easy.
-"""
 
 
 import socket
 import time
-import sys
 import threads
-from cprint import cprint
 
 
-class base():
+class Connection():
 
-	previous = b''
-	password = None
-	queue = []
-	connected = False
+    def __init__(self, network, port=6667, password=None):
+        """__init__
+        creates and or sets some default variables
 
-	def __init__(self, network, port, nickname, user, host, realname,
-				 rejoin=True):
-		"""__init__
-		Starts the bot base.
-		
-		params:
-			network:	The network for the irc bot to join.
-			port:		The port for the bot to join.
-			rejoin:		True if you want the bot to attempt to rejoin
-						when he disconnects.
-		"""
-		self.nickname = nickname
-		self.host = host
-		self.user = user
-		self.realname = realname
-		self.network = network
-		self.port = port
-		self.rejoin = rejoin
-		self.onSTARTUP()
+        params:
 
-	def connect(self, attempts=10, delay=10):
-		"""connect
-		Attempts to connect to IRC.
+        network:    str:    The network for the bot to join.
+        port:       int:    The port for the bot to join on.
+                            Default 6667
+        password:   str:    The password for the server.
 
-		params:
-			attempts:	The amount of times to try to connect.
-						10 seconds ( by default ) in between each try.
-			delay:		The delay in seconds between each try. 10 by default.
-		"""
-		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		self.display('Attempting to connect to IRC.')
-		self.connceted = False
-		for attempt in range(0, attempts):
-			try:
-				self.display('Attempt ' + str(attempt))
-				self.socket.connect((self.network, self.port))
-			except TimeoutError:
-				self.display('Connection attempt ' + str(attempt + 1) + 
-							 ' failed.')
-				time.sleep(delay)
-				continue
-			else:
-				self.connected = True
-				self.display('[.green]Connected.')
-				self.identify(self.nickname, self.user, self.host,
-							  self.realname)
-				return True
-		return False
+        NOTE:
 
-	def onSTARTUP(self):
-		"""onSTARTUP
-		Called when the bot's __init__ finished.
-		This also happens before the connecting.
-		If you overright this, you will need to call .connect at some later
-		time.
-		"""
-		connected = self.connect()
-		if connected is False:
-			self.display('Could not connect. Shutting down.')
-			self.shutdown()
-		return None
+        password is NOT the password for NickServ or other
+        identification bots the server may have.
+        """
+        self.network = network
+        self.port = port
+        self.socket = None
+        self.nickname = None
+        self.user = None
+        self.host = None
+        self.realname = None
+        self.handler = handler
+        self.password = None
+        self.rate_limit = [4, 3]
+        self.previous_sendtime = None
+        self.previous_sent = []
+        self.running = True
+        self.use_history = False
+        self.history = []
+        self.display_func = print
 
-	def identify(self, nickname, user, host, realname, password=None):
-		"""identify
-		Identifies the bot.
+    def __enter__(self):
+        return self
 
-		params:
-			nickname:	The nickname for the bot to use.
-			user:		The user for the bot to use.
-			host:		The host of the bot.
-			realname:	The real name of the bot.
-			password:	The password for the server. Please note:
-						This IS NOT the password for server's bot such as 
-						freenode's Nickserv. You will need to send the 
-						password at some other time.
-		"""
-		self.nickname = nickname
-		self.user = user
-		self.host = host
-		self.realname = realname
-		if password is not None:
-			self.password = password
-			self.send('PASS ' + password)
-		self.send('NICK ' + nickname)
-		self.send('USER ' + nickname + ' ' + user + ' ' + host + ' :' + 
-				  realname)
-		return None
+    def __exit__(self, ctx_type, ctx_value, ctx_traceback):
+        self.close_connection()
+        return None
+    
+    def display(self, text, padding=True):
+        """display
+        A simple print() wrapper that prepends some data such as 
+        network and nickname.
 
-	def send(self, data):
-		"""send
-		A wrapper for the normal socket send. This converts the data param
-		into bytes and auto appends a newline.
+        params:
 
-		params:
-			data:	The data to send to IRC.
-		"""
-		if isinstance(data, list):
-			for d in data:
-				self.send(d)
-			return None
-		self.display('< ' + data, 'green')
-		sent = self.socket.send(bytes(data + '\r\n', 'utf-8'))
-		if sent == 0:
-			self.try_rejoin()
-		return None
+        text:   str:    The text to send to print.
+        """
+        if padding:
+            self.display_func('{} - {} - {}'.format(self.network,
+                              self.nickname, text))
+        else:
+            self.display_func('{}'.format(text))
+        return None
 
-	def main_loop(self):
-		"""main_loop
-		The main data recieving loop for the IRC bot. This section will
-		get the data, if the data isn't full it will wait until it gets all
-		the data. Then it will send it to handle_data.
-		"""
-		while True:
-			try:
-				recv = self.socket.recv(1024)
+    def send(self, data):
+        """send
+        Sends some data to the connected server.
+        The data being sent is also displayed so you know what is
+        going on.
 
-				if recv == '':
-					for i in range(0, 10):
-						recv = self.socket.recv(1024)
-						if recv != '':
-							break
-						if i == 9:
-							if self.try_rejoin() is False:
-								return None
+        There are also some error checks and connection checks
+        to make sure the data is sent. If not, it attempts to
+        reconnect.
 
-			except OSError:
-				if self.rejoin:
-					connected = self.connect()
-					if connected is False:
-						self.shutdown()
-						self.display('Could not reconnect. Shutting down.')
-					continue
+        This also has a built in rate limit, based off the
+        self.rate_limit variable. self.rate_limit = [a, t]
+        a = the amount it needs before it limits.
+        t = the time to sleep before sending more data.
 
-			if recv.endswith(b'\r\n'):
-				self.handle_data(self.previous + recv)
-				self.previous = b''
-			else:
-				self.previous += recv
-		return None
+        params:
 
-	def try_rejoin(self):
-		"""try_rejoin
-		Attempts to rejoin to IRC. Only if the self.rejoin is set
-		to True.
-		"""
-		if self.rejoin is True:
-			connected = self.connect()
-			if connected is False:
-				return False
-			return True
-		return False
+        data:   str:    The data to send to the server.
 
-	def handle_data(self, data):
-		"""handle_data
-		This will handle data incoming from the main_loop.
-		This is where all the action happens. It splits it up and turns things
-		into onMESSAGE setups. messages will be things like JOIN, PART and
-		other IRC things.
+        NOTE:
 
-		params:
-			data:	The data to handle.
-		"""
-		try:
-			data = data.decode('utf-8')
-		except UnicodeDecodeError:
-			return None
+        This function automatically appends \r\n to the end
+        of the data. So there is no need to send it.
 
-		for line in data.split('\r\n'):
-			if line == '':
-				continue
-			self.display('> ' + line, 'yellow')
-			split = line.split(' ')
-			if len(split) < 2:
-				continue
-			
-			queue = self.queue
-			for index, event in enumerate(queue):
-				if event['event'] == split[1]:
-					self.queue[index]['function'](*self.queue[index]['params'])
-				self.queue.pop(index)
+        This function also automatically converts to bytes
+        so all you need to do is send something like
 
-			if hasattr(self, 'onALL'):
-				self.onALL(*split)
+        .send("PRIVMSG #channel :Hello")
 
-			if hasattr(self, 'on' + split[0]):
-				getattr(self, 'on' + split[0])(*split[1:])
-			if hasattr(self, 'on' + split[1]):
-				getattr(self, 'on' + split[1])(*[split[0]] + split[2:])
-		return None
+        and it will work
+        """
+        if (self.previous_sendtime is not None and 
+                time.time() - self.previous_sendtime <
+                self.rate_limit[1] and
+                len(self.previous_sent) > self.rate_limit[0]):
+            time.sleep(self.rate_limit[1])
+            self.previous_sent = []
 
-	def on433(self, *junk):
-		"""on433
-		Happens when the current nickname is taken.
-		This function appends a _ then tries again.
-		"""
-		self.nickname = self.nickname + '_'
-		self.send('NICK ' + self.nickname)
-		return None
+        self.previous_sendtime = time.time()
+        self.previous_sent.append(data)
 
-	def onERROR(self, *params):
-		"""onERROR
-		Called when an error is found in the IRC data.
-		"""
-		if ' '.join(params[:2]) == ':Closing Link:':
-			if self.try_rejoin() is True:
-				return None
-			self.shutdown()
-		return None
+        if self.socket is None:
+            self.display('[SOCKET-ERROR] Socket is empty.')
+            return 1
+        try:
+            sent = self.socket.send('{}\r\n'.format(data).encode('utf-8'))
+        except Exception:
+            sent = 0
+        if sent == 0:
+            self.display('[SOCKET-OUT-ERROR] Did not / Could not send.')
+            connected = self.reconnect()
+            if not connected:
+                return 1
+        else:
+            self.display('[SOCKET-OUT] {}'.format(data))
+        return None
 
-	def onPING(self, *params):
-		"""onPING
-		Called when the bot finds a ping message.
-		It will then send a pong back to the server.
-		"""
-		self.send('PONG ' + params[0])
-		return None
+    def set_ident(self, nickname, user='sjBot',
+                  host='Uptone-Software',
+                  realname='Uptone-software/Bot'):
+        """set_ident
+        Sets the identity of the bot. You MUST call this function 
+        before you attempt to .connect()
 
-	def shutdown(self):
-		"""shutdown
-		The shutdown function. This will close connection to IRC.
-		It will also display the message 'Shutting down'.
-		"""
-		if self.connected == False:
-			self.display('Could not connect to IRC. Shutting down.')
-			return None
-		self.display('Shutting down.')
-		self.send('QUIT :Shutting down.')
-		self.socket.close()
-		return None
+        params:
 
-	def display(self, data, color='purple'):
-		"""display
-		Displays some text in the IRC. This is basically a wrapper for
-		the print function, although, you can add your own to your bot class
-		this means you can overright my bots printing to suit you. 
-		For example, you can make your own display method where it puts a
-		timestamp inront of all messages.
+        nickname:   str:    The nickname of the bot.
+        user:       str:    The user of the bot.
+        host:       str:    The host of the bot.
+        realname:   str:    The bots real name, this shows up in a 
+                            /whois.
+        """
+        self.nickname = nickname
+        self.user = user
+        self.host = host
+        self.realname = realname
+        return None
 
-		params:
-			data:	The data that gets displayed.
-		"""
-		cprint('[.' +  color + ']' + data)
-		return None
+    def set_handler(self, handler, functions):
+        """set_handler
+        Sets the function / method that will receive the incoming data.
+        The data is first processed by this class, then passed to the 
+        handler.
 
-	def privmsg(self, channel, data):
-		"""privmsg
-		Sends a privmsg to IRC.
+        params:
 
-		params:
-			channel:	The channel to send it to. If this is a username it
-						will be a query ( you may know this as PM or by 
-						another name ).
-		"""
-		self.send('PRIVMSG ' + channel + ' :' + data)
-		return None
+        handler:    function:       The function or method that will
+                                    receive incoming data.
+        functions:  dict:           A list of functions that the handler
+                                    will be able to access.
 
-	def action(self, channel, action):
-		"""action
-		A privmsg wrapper that makes the bot do an action. In irc
-		it will look something like   * bot just entered the room
+        NOTE:
 
-		params:
-			channel:	The channel to send the action to.
-			action:		The string to use as the action.
-		"""
-		self.privmsg(channel, '\x01ACTION ' + action + '\x01')
-		return None
+        ERROR's and PING's will not be sent to this handler.
+        They will be automatically passed to a method of this class.
+        """
+        self.handler = handler
+        self.handler_functions = functions
+        return None
 
-	def join(self, channel):
-		"""join
-		Joins a channel.
+    def identify(self):
+        """identify
+        Sends the bots identity to the server.
+        If there is a password set he will send that first.
+        """
+        self.display('[IDENT] Sending identification information.')
+        if self.password is not None:
+            self.send('PASS {}'.format(self.password))
+        self.send('NICK {}'.format(self.nickname))
+        self.send('USER {} {} {} :{}'.format(self.nickname, self.user, 
+                  self.host, self.realname))
+        return None
 
-		params:
-			channel:	The channel to join.
-		"""
-		if isinstance(channel, list):
-			for chan in channel:
-				self.send('JOIN ' + chan)
-			return None
-		self.send('JOIN ' + channel)
-		return None
+    def connect(self, attempts=10, delay=5):
+        """connect
+        Attempts to connect to the server.
+        This will return True if it connects and False if it doesn't.
 
-	def leave(self, channel):
-		"""leave
-		Leaves a channel.
+        params:
 
-		params:
-			channel:	The channel to leave.
-		"""
-		if isinstance(channel, list):
-			for chan in channel:
-				self.send('PART ' + chan)
-			return None
-		self.send('PART ' + channel)
-		return None
+        attempts:   int:    The number of attempts to make, it will 
+                            stop if it can connect.
+        delay:      int:    The delay between each connection attempt.
+        """
+        # Check if all of the needed info has been set.
+        if (self.nickname is None or self.user is None or self.host is None or
+                self.realname is None):
+            self.display('[IDENT] You need to set the ident before '
+                         'connecting.')
+            return 1
+        
+        self.display('[SOCKET] Creating the socket connection.')
+        
+        self.socket = socket.socket()
 
-	def nick(self, nickname):
-		"""nick
-		Changes the nickname of the bot.
+        # Attempt to connect to the server. It will try the number
+        # in the attempts param before giving up.
 
-		params:
-		 nickname:	The new nickname of the bot.
-		"""
-		self.nickname = nickname
-		self.send('NICK ' + nickname)
-		return None
+        for attempt in range(attempts):
+            try:
+                self.display('[SOCKET] Connecting to {} - {}'.format(
+                             self.network, self.port))
+                self.socket.connect((self.network, self.port))
+            except Exception as error:
+                sleep_time = delay * (attempt+1)
+                self.display('[SOCKET] Connection {} failed. {}'.format(
+                             attempt+1, error))
+                self.display('[SOCKET] Waiting for {} seconds before '
+                             'retrying.'.format(sleep_time))
+                time.sleep(sleep_time)
+                continue
+            else:
+                self.display('[SOCKET] Connected!')
+                return True
+        return False
 
-	def notify(self, user, data):
-		"""notify
-		Sends a NOTICE to the user.
+    def reconnect(self, delay=30):
+        """reconnect
+        Attempts to reconnect, this is basically a padded wrapper for 
+        the connect method.
+        
+        There are no params passed to connect, so it will try to 
+        connect with the default params.
 
-		params:
-			user:	The user to send the data to.
-			data:	The data to send to the user.
-		"""
-		self.send('NOTICE ' + user + ' :' + data)
-		return None
+        This returns True if it could reconnect, False otherwise.
+
+        params:
+
+        delay:      int:    The delay before it starts the connect
+                            loop.
+        """
+        self.display('[SOCKET] Attempting to reconnect in {} seconds'.format(
+                     delay))
+        time.sleep(delay)
+        connected = self.connect()
+        if not connected:
+            self.display('[SOCKET] Could not reconnect.')
+        else:
+            self.identify()
+        return connected
+
+    @threads.asthread()
+    def receive_loop(self):
+        """receive_loop
+        This threaded loop handles all the incoming data.
+        It will check the data and then either pass it to the handler 
+        function, handle_error method or pong method.
+
+        returns:
+
+        1       If the .handler variable has not been set.
+        2       if the bot loses connection and cannot reconnect.
+        """
+        if self.handler is None:
+            self.display('[ERROR] You need to set a .handler function before '
+                         'you can use the receive_loop method.')
+            return 1
+        previous = ''
+        while self.running:
+            try:
+                recv = self.socket.recv(1024).decode('utf-8')
+            except UnicodeDecodeError as e:
+                self.display('[SOCKET-IN-ERROR] {}'.format(e))
+            except ConnectionResetError:
+                connected = self.reconnect()
+                if not connected:
+                    return 2
+            
+            if recv.endswith('\r\n'):
+                self.handler(self, previous + recv, self.handler_functions)
+                previous = ''
+            else:
+                previous += recv
+        return None
+
+    def join(self, channel):
+        """join
+        Makes the bot join a channel.
+
+        params:
+
+        channel:    str:    The channel to join.
+        """
+        self.send('JOIN {}'.format(channel))
+        return None
+
+    def privmsg(self, channel, message):
+        """privmsg
+        Sends a message to a person/channel.
+
+        params:
+
+        channel:    str:    The channel/person to send to.
+        message:    str:    The message to send.
+        """
+        self.send('PRIVMSG {} :{}'.format(channel, message))
+        return None
+
+    def set_nickname(self, nickname):
+        """set_nickname
+        Sets the nickname of the bot. This changes the .nickname var
+        and sends NICK to the server
+
+        params:
+
+        nickname:       str:        The new nickname of the bot.
+        """
+        self.nickname = nickname
+        self.send('NICK {}'.format(nickname))
+        return None
+
+    def close_connection(self):
+        """close_connection
+        Closes the connection to the socket and clears the variable.
+        """
+        self.send('QUIT :Bye!')
+        self.socket.close()
+        self.running = False
+        self.socket = None
+        return None
 
 
-if __name__ == '__main__':
-	help(base)
+def handler(connection, data, functions):
+    """handler
+
+    A default handler function that the user can specify for the data
+    handler. Either this or make thier own.
+
+    params:
+
+    connection:     Connection:     The Connection instance that
+                                    is being handled.
+    data:           str:            The IRC data that is being passed
+                                    in.
+    functions:      dict:           A dictionary of functions that will
+                                    be used to check for event 
+                                    functions.
+    """
+    for line in data.split('\r\n'):
+        if line == '':
+            continue
+        connection.display('[SOCKET-IN] {}'.format(line))
+        spaced = line.split(' ')
+        first_check = 'r_{}'.format(spaced[0])
+        second_check = 'r_{}'.format(spaced[1])
+        if first_check in functions:
+            functions[first_check](connection, *spaced[1:])
+        elif second_check in functions:
+            functions[second_check](connection, *[spaced[0]] + spaced[2:])
+        if 'r_ALL' in functions:
+            functions['r_ALL'](connection, *spaced)
+    return None

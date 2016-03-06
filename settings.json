@@ -1,0 +1,67 @@
+{
+    "connections":
+    {
+        "irc.freenode.net":
+        {
+            "port": 6667,
+            "nickname": "sjBot",
+            "running": false,
+            "trigger": 
+            {
+                "default": ["`"],
+                "#donationcoder": ["`", "."],
+                "##monsterhunter": ["!"],
+                "__botname__": ["!", "`", "."]
+            },
+            "default_commands":
+            {
+                "##monsterhunter": "mh4u",
+                "#ahkscript": "ahk",
+                "#ahk": "ahk",
+                "#donationcoder": "search"
+            },
+            "ignore_suffix": {
+                "#donationcoder": ["."],
+                "#ahk": ["r", "n", "d"],
+                "#ahkscript": ["r", "n", "d"]
+            },
+            "channels": ["#Sjc_Bot", "#ahk", "#ahkscript", "#donationcoder", "##monsterhunter"],
+            "nickserv_password": "PASSWORD_HERE",
+            "owners":
+            [
+                "unaffiliated/sjc1000"
+            ]
+        },
+        "localhost":
+        {
+            "port": 6667,
+            "nickname": "sjBot",
+            "running": true,
+            "trigger":
+            {
+                "default": ["!", "`"]
+            },
+            "default_commands":
+            {
+                "##monsterhunter": "mh4u"
+            },
+            "ignore_suffix": {
+                "#donationcoder": ["."],
+                "#ahk": ["r", "n", "d"],
+                "#ahkscript": ["r", "n", "d"]
+            },
+            "channels": ["#Sjc_Bot", "#donationcoder", "##monsterhunter"],
+            "owners":
+            [
+                "steven"
+            ]
+        }
+    },
+    "google_key": "google_key",
+    "wordnik_key": "wordnik_key",
+    "kiranico":
+    {
+        "mh4u": "cse mh4u key",
+        "mhx": "cse mhx key"
+    }
+}

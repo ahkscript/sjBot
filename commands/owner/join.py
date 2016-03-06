@@ -1,7 +1,7 @@
+#!/usr/bin/env python3
 
-meta_data 	= { "help": ["Makes the bot join a channel. Only usable by one of the bots owners.","Usage: &botcmdjoin <channel 1> [channel 2] [channel 3]"], "aliases": ["j", "join"], "owner": 1 }
 
-def execute(parent, commands, user, host, channel, params ):
-	for channel in params:
-		parent.join( channel )
-	return 0
+def join(con, sjBot, commands, trigger, host, channel, channels):
+    """Joins a comma seperated list of channels."""
+    con.send('JOIN {}'.format(channels))
+    return None

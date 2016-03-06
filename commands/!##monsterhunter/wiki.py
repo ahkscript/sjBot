@@ -1,23 +1,25 @@
+#!/usr/bin/env python3
+
+
 import json
 import urllib.parse
 
-meta_data 	= { "help": ["Searches for a wiki page","Usage: &botcmdwiki <query>"], "aliases": ["wiki", "wik"], "owner": 0 }
 
-def execute(parent, commands, user, host, channel, params):
-	if len(params) == 0:
-		return [meta_data['help'][1]]
-	
-	search = 'site:http://en.wikipedia.org%20' + '%20'.join(params)
-	print( search )
-	try:
-		search_data = parent.download_url('https://www.googleapis.com/customsearch/v1?key=A' + parent.keys['google'] + 'Q&cx=009062493091172133168:4ckmchbpuzy&q=' + search)
-	except UnicodeDecodeError:
-		return ['No data found!']
-	
-	response = json.loads(search_data)
-	try:
-		title = response['items'][0]['title']
-		url = response['items'][0]['link']
-	except (IndexError, KeyError):
-		return ['No data found!']
-	return ["\x02" + urllib.parse.unquote( title ) + "\x02 - " + parent.shorten_url(url)]
+aliases = ['w']
+
+
+def wiki(con, sjBot, commands, trigger, host, channel, *query):
+    search = urllib.parse.quote(' '.join(query))
+    download = sjBot['url_download']
+    api_key = sjBot['settings']['google_key']
+    query_result = download('https://www.googleapis.com/customsearch/v1'
+                            '?key={}&cx=009062493091172133168:4ckmchbpuzy&'
+                            'q=site:en.wikipedia.org%20{}'.format(api_key,
+                            search))
+    query_data = json.loads(query_result)
+    try:
+        search_result = query_data['items'][0]
+        url = search_result['formattedUrl']
+    except Exception:
+        return 'No results found.'
+    return '\x02{}\x02 - {}'.format(' '.join(query), url)

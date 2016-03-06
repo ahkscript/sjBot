@@ -1,14 +1,21 @@
+#!/usr/bin/env python3
+
+
 import random
 
 
-meta_data   = { "help": ["Dances","Usage: &botcmddance"], "aliases": ["dance", "d"], "owner": 0 }
+owner = False
+aliases = ['moveyourbooty']
 
 
-def execute(parent, commands, user, host, channel, params ):
-    dance       = ["<(^_^)>",">(^_^)>","<(^_^)<","^(^_^)^","v(^_^)v"]
-    colorCode   = [ "\x032", "\x033","\x034", "\x035", "\x036", "\x037","\x038", "\x039","\x0310","\x0311","\x0312","\x0313","\x0315" ]
-    returnData  = []
-    for x in range(3, 10):
-        choice = random.choice(dance)
-        returnData.append( random.choice( colorCode ) + choice + "\x03" )
-    return ['Wooo dance time! ' + ' '.join( returnData )]
+def dance(con, sjBot, commands, trigger, host, channel, person=None):
+    """Shows some dance moves. Optionally dances with someone."""
+    movements = ['\\o\\', '/o/', '\\o/', '\\o_', '_o/']
+    if person is not None:
+        output = 'Dance with me {}! '.format(person)
+    else:
+        output = 'Dance! '
+    for i in range(random.randint(4, 8)):
+        output += '\x03{}{}\x03 '.format(random.randint(1, 9),
+                  random.choice(movements))
+    return output
